@@ -303,7 +303,7 @@ can 2 cancel, or entire group needs to cancel
 
 
 
-#### 6. Waitlist + partial cancellation interaction: capacity 100, 100 registered, 10 on waitlist. One person from the confirmed 100 cancels 3 seats (was a group of 3). Does the waitlist get offered exactly 3 seats, and if the top waitlisted group needs 5, do they get skipped in favor of a smaller group, or does everything block until they respond?
+<!-- #### 6. Waitlist + partial cancellation interaction: capacity 100, 100 registered, 10 on waitlist. One person from the confirmed 100 cancels 3 seats (was a group of 3). Does the waitlist get offered exactly 3 seats, and if the top waitlisted group needs 5, do they get skipped in favor of a smaller group, or does everything block until they respond? -->
 
 # IMP caveat
 ### - Partial registration:
