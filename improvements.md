@@ -1,6 +1,6 @@
 ### This file contains improvements that can be made
 
-- Points would be removed once implemented
+- (Points would be removed once implemented)
 
 Yes — a handful of these will bite you specifically because of choices already implied in the spec. Here's what to watch for, grouped by where the pain shows up.
 
