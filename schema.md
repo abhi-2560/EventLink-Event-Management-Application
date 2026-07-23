@@ -964,8 +964,8 @@ Table "registration" {
 Table "payment" {
   "payment_id" UUID [pk, default: `gen_random_uuid()`]
   "registration_id" UUID [unique]
-  "razorpay_order_id" TEXT
-  "razorpay_payment_id" TEXT
+  "razorpay_order_id" TEXT [unique]
+  "razorpay_payment_id" TEXT [unique]
   "receipt_number" TEXT [unique]
   "receipt_generated_at" TIMESTAMPTZ
   "event_id" UUID

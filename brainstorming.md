@@ -1,4 +1,10 @@
 # Brainstorming
+
+- Do we need to implement checks everywhere or can we implement them in the backend
+
+- Do we need to index every feasable attribute?
+- not for scale
+
 - Particular seat booking for theatres
 - waiting list?: It is there
 - How does our platform earn
