@@ -1,9 +1,9 @@
 from .admin import Admin
 from .audit_log import AuditLog
-from .catagory import Category
+from .category import Category
 from .coupon import Coupon
 from .event import Event
-from .organiser import Organizer
+from .organizer import Organizer
 from .payment import Payment
 from .registration import Registration
 

@@ -17,7 +17,7 @@ class Organizer(db.Model):
         primary_key=True,
         server_default=text("gen_random_uuid()"),
     )
-    organization_name = db.Column(String(255), nullable=False)
+    organizer_name = db.Column(String(255), nullable=False)
     contact_person = db.Column(String(255), nullable=False)
     email = db.Column(String(255), nullable=False, unique=True)
     phone = db.Column(String(50), nullable=False)
