@@ -8,6 +8,7 @@ class AdminRepository(BaseRepository):
         super().__init__(Admin)
 
     def get_by_email(self, email):
+        
         return Admin.query.filter_by(email=email).first()
 
     def get_active_admins(self):
