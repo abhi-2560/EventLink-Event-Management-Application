@@ -7,3 +7,19 @@ build/
 out/
 target/
 
+venv/
+__pycache__/
+*.pyc
+
+instance/
+
+migrations/__pycache__/
+
+.pytest_cache/
+
+.vscode/
+
+.idea/
+
+process.md
+post_generation_msg.md
