@@ -19,7 +19,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from app.repositories.admin_repository import AdminRepository
 from app.repositories.organizer_repository import OrganizerRepository
 from .audit_service import log_action
-from .exceptions import NotFoundError, ValidationError
+from .exceptions import ConflictError, NotFoundError, ValidationError
 
 _admin_repo = AdminRepository()
 _organizer_repo = OrganizerRepository()
@@ -37,6 +37,38 @@ def _repo_for(actor_type: str):
     return repo
 
 
+def register_organizer(payload: dict):
+    organizer_name = (payload.get("organizer_name") or "").strip()
+    contact_person = (payload.get("contact_person") or "").strip()
+    email = (payload.get("email") or "").strip().lower()
+    phone = (payload.get("phone") or "").strip()
+    password = payload.get("password") or ""
+
+    if not organizer_name:
+        raise ValidationError("organizer_name is required")
+    if not contact_person:
+        raise ValidationError("contact_person is required")
+    if not email:
+        raise ValidationError("email is required")
+    if not phone:
+        raise ValidationError("phone is required")
+    if not password:
+        raise ValidationError("password is required")
+
+    if _organizer_repo.get_by_email(email) is not None:
+        raise ConflictError("Organizer with this email already exists")
+
+    organizer = _organizer_repo.create(
+        organizer_name=organizer_name,
+        contact_person=contact_person,
+        email=email,
+        phone=phone,
+        password_hash=generate_password_hash(password),
+        status="ACTIVE",
+    )
+    return organizer
+
+
 def authenticate(actor_type: str, email: str, password: str, ip_address: str | None = None):
     """
     Verify credentials and return the actor row on success.
@@ -44,7 +76,6 @@ def authenticate(actor_type: str, email: str, password: str, ip_address: str | N
     """
     repo = _repo_for(actor_type)
     actor = repo.get_by_email(email)
-
     if actor is None or not check_password_hash(actor.password_hash, password):
         log_action(
             actor_type="SYSTEM",
