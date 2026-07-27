@@ -5,10 +5,17 @@ from .extensions import db, migrate, jwt, init_razorpay
 from .services.exceptions import ServiceError
 
 
+from flask_cors import CORS
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+
+    CORS(
+        app,
+        resources={r"/*": {"origins": "http://localhost:5173"}},
+        supports_credentials=True,
+    )
 
     db.init_app(app)
     migrate.init_app(app, db)
