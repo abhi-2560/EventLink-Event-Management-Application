@@ -1,10 +1,7 @@
-import api from "./axios";
+import api from './axios';
 
-export async function createRegistration(payload) {
-    const { data } = await api.post(
-        "/registrations",
-        payload
-    );
+export const createRegistration = (payload) =>
+  api.post('/registrations', payload).then((r) => r.data);
 
-    return data;
-}
+export const getRegistration = (registrationId) =>
+  api.get(`/registrations/${registrationId}`).then((r) => r.data);

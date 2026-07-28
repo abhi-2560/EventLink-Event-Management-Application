@@ -10,10 +10,10 @@ Based **strictly on your elicited requirements** (nothing out of scope), these a
 
 | Method | Endpoint                          | Purpose         |
 | ------ | --------------------------------- | --------------- |
-| POST   | `/api/auth/admin/login`           | Admin login     |
-| POST   | `/api/auth/admin/logout`          | Logout          |
-| POST   | `/api/auth/admin/forgot-password` | Send reset mail |
-| POST   | `/api/auth/admin/reset-password`  | Reset password  |
+| POST   | `/auth/admin/login`           | Admin login     |
+| POST   | `/auth/admin/logout`          | Logout          |
+| POST   | `/auth/admin/forgot-password` | Send reset mail |
+| POST   | `/auth/admin/reset-password`  | Reset password  |
 
 ---
 
@@ -21,10 +21,10 @@ Based **strictly on your elicited requirements** (nothing out of scope), these a
 
 | Method | Endpoint                              | Purpose         |
 | ------ | ------------------------------------- | --------------- |
-| POST   | `/api/auth/organizer/login`           | Organizer login |
-| POST   | `/api/auth/organizer/logout`          | Logout          |
-| POST   | `/api/auth/organizer/forgot-password` | Send reset mail |
-| POST   | `/api/auth/organizer/reset-password`  | Reset password  |
+| POST   | `/auth/organizer/login`           | Organizer login |
+| POST   | `/auth/organizer/logout`          | Logout          |
+| POST   | `/auth/organizer/forgot-password` | Send reset mail |
+| POST   | `/auth/organizer/reset-password`  | Reset password  |
 
 ---
 
@@ -34,10 +34,10 @@ Based **strictly on your elicited requirements** (nothing out of scope), these a
 Do not need: Create and Update organizer / registrant
 | Method | Endpoint                             | Purpose               |
 | ------ | ------------------------------------ | --------------------- |
-| GET    | `/api/admin/organizers`              | List organizers       |
-| GET    | `/api/admin/organizers/{id}`         | Organizer details     |
-| DELETE | `/api/admin/organizers/{id}`         | Hard delete organizer |
-| PATCH  | `/api/admin/organizers/{id}/archive` | Soft delete organizer |
+| GET    | `/admin/organizers`              | List organizers       |
+| GET    | `/admin/organizers/{id}`         | Organizer details     |
+| DELETE | `/admin/organizers/{id}`         | Hard delete organizer |
+| PATCH  | `/admin/organizers/{id}/archive` | Soft delete organizer |
 
 ---
 
@@ -47,10 +47,10 @@ Admin cannot create events.
 
 | Method | Endpoint                         | Purpose           |
 | ------ | -------------------------------- | ----------------- |
-| GET    | `/api/admin/events`              | View all events   |
-| GET    | `/api/admin/events/{id}`         | Event details     |
-| PATCH  | `/api/admin/events/{id}/archive` | Archive event     |
-| DELETE | `/api/admin/events/{id}`         | Hard delete event |
+| GET    | `/admin/events`              | View all events   |
+| GET    | `/admin/events/{id}`         | Event details     |
+| PATCH  | `/admin/events/{id}/archive` | Archive event     |
+| DELETE | `/admin/events/{id}`         | Hard delete event |
 
 ---
 
@@ -58,10 +58,10 @@ Admin cannot create events.
 
 | Method | Endpoint                     | Purpose         |
 | ------ | ---------------------------- | --------------- |
-| POST   | `/api/admin/categories`      | Create category |
-| GET    | `/api/admin/categories`      | List categories |
-| PUT    | `/api/admin/categories/{id}` | Update category |
-| DELETE | `/api/admin/categories/{id}` | Delete category |
+| POST   | `/admin/categories`      | Create category |
+| GET    | `/admin/categories`      | List categories |
+| PUT    | `/admin/categories/{id}` | Update category |
+| DELETE | `/admin/categories/{id}` | Delete category |
 
 ---
 
@@ -69,10 +69,10 @@ Admin cannot create events.
 
 | Method | Endpoint                  | Purpose       |
 | ------ | ------------------------- | ------------- |
-| POST   | `/api/admin/coupons`      | Create coupon |
-| GET    | `/api/admin/coupons`      | List coupons  |
-| PUT    | `/api/admin/coupons/{id}` | Update coupon |
-| DELETE | `/api/admin/coupons/{id}` | Delete coupon |
+| POST   | `/admin/coupons`      | Create coupon |
+| GET    | `/admin/coupons`      | List coupons  |
+| PUT    | `/admin/coupons/{id}` | Update coupon |
+| DELETE | `/admin/coupons/{id}` | Delete coupon |
 
 ---
 
@@ -80,9 +80,9 @@ Admin cannot create events.
 
 | Method | Endpoint                       | Purpose                     |
 | ------ | ------------------------------ | --------------------------- |
-| GET    | `/api/admin/reports/dashboard` | Overall platform statistics |
-| GET    | `/api/admin/reports/monthly`   | Monthly report              |
-| GET    | `/api/admin/reports/category`  | Category-wise report        |
+| GET    | `/admin/reports/dashboard` | Overall platform statistics |
+| GET    | `/admin/reports/monthly`   | Monthly report              |
+| GET    | `/admin/reports/category`  | Category-wise report        |
 
 ---
 
@@ -90,8 +90,8 @@ Admin cannot create events.
 
 | Method | Endpoint                     | Purpose     |
 | ------ | ---------------------------- | ----------- |
-| GET    | `/api/admin/audit-logs`      | View logs   |
-| GET    | `/api/admin/audit-logs/{id}` | Log details |
+| GET    | `/admin/audit-logs`      | View logs   |
+| GET    | `/admin/audit-logs/{id}` | Log details |
 
 ---
 
@@ -101,14 +101,14 @@ Admin cannot create events.
 
 | Method | Endpoint                                        | Purpose            |
 | ------ | ----------------------------------------------- | ------------------ |
-| POST   | `/api/organizer/events`                         | Create event       |
-| GET    | `/api/organizer/events`                         | My events          |
-| GET    | `/api/organizer/events/{id}`                    | Event details      |
-| PUT    | `/api/organizer/events/{id}`                    | Update event       |
-| PATCH  | `/api/organizer/events/{id}/publish`            | Publish draft      |
-| PATCH  | `/api/organizer/events/{id}/close-registration` | Close registration |
-| PATCH  | `/api/organizer/events/{id}/archive`            | Archive event      |
-| DELETE | `/api/organizer/events/{id}`                    | Hard delete        |
+| POST   | `/organizer/events`                         | Create event       |
+| GET    | `/organizer/events`                         | My events          |
+| GET    | `/organizer/events/{id}`                    | Event details      |
+| PUT    | `/organizer/events/{id}`                    | Update event       |
+| PATCH  | `/organizer/events/{id}/publish`            | Publish draft      |
+| PATCH  | `/organizer/events/{id}/close-registration` | Close registration |
+| PATCH  | `/organizer/events/{id}/archive`            | Archive event      |
+| DELETE | `/organizer/events/{id}`                    | Hard delete        |
 
 ---
 
@@ -116,8 +116,8 @@ Admin cannot create events.
 
 | Method | Endpoint                                   | Purpose           |
 | ------ | ------------------------------------------ | ----------------- |
-| GET    | `/api/organizer/events/{id}/registrations` | View participants |
-| GET    | `/api/organizer/events/{id}/sales`         | View total sales  |
+| GET    | `/organizer/events/{id}/registrations` | View participants |
+| GET    | `/organizer/events/{id}/sales`         | View total sales  |
 
 ---
 
@@ -129,8 +129,8 @@ No authentication.
 
 | Method | Endpoint           | Purpose       |
 | ------ | ------------------ | ------------- |
-| GET    | `/api/events`      | List events   |
-| GET    | `/api/events/{id}` | Event details |
+| GET    | `/events`      | List events   |
+| GET    | `/events/{id}` | Event details |
 
 ---
 
@@ -140,7 +140,7 @@ Single search endpoint with filters.
 
 | Method | Endpoint             |
 | ------ | -------------------- |
-| GET    | `/api/events/search` |
+| GET    | `/events/search` |
 
 Supported query params
 
@@ -158,7 +158,7 @@ keyword
 Example
 
 ```text
-/api/events/search?city=Indore&type=OFFLINE
+/events/search?city=Indore&type=OFFLINE
 ```
 
 ---
@@ -173,7 +173,7 @@ No login required.
 
 | Method | Endpoint             |
 | ------ | -------------------- |
-| POST   | `/api/registrations` |
+| POST   | `/registrations` |
 
 This API
 
@@ -181,7 +181,7 @@ This API
 * reserves seats
 * applies coupon
 * creates pending registration
-* creates Razorpay order
+* Leads to payment simulation page
 
 Returns
 
@@ -190,7 +190,7 @@ Registration ID
 
 Reservation expiry
 
-Razorpay Order
+Random order id
 ```
 
 ---
@@ -199,7 +199,7 @@ Razorpay Order
 
 | Method | Endpoint                  |
 | ------ | ------------------------- |
-| GET    | `/api/registrations/{id}` |
+| GET    | `/registrations/{id}` |
 
 Useful for receipt page.
 
@@ -209,7 +209,7 @@ Useful for receipt page.
 
 | Method | Endpoint                |
 | ------ | ----------------------- |
-| POST   | `/api/coupons/validate` |
+| POST   | `/coupons/validate` |
 
 Input
 
@@ -231,13 +231,13 @@ final amount
 
 ---
 
-# 7. Razorpay APIs
+# 7. Payment APIs
 
 ## Create Order
 
 | Method | Endpoint                     |
 | ------ | ---------------------------- |
-| POST   | `/api/payments/create-order` |
+| POST   | `/payments/create-order` |
 
 ---
 
@@ -245,7 +245,7 @@ final amount
 
 | Method | Endpoint               |
 | ------ | ---------------------- |
-| POST   | `/api/payments/verify` |
+| POST   | `/payments/verify` |
 
 On success
 
@@ -260,7 +260,7 @@ On success
 
 | Method | Endpoint                |
 | ------ | ----------------------- |
-| POST   | `/api/payments/failure` |
+| POST   | `/payments/failure` |
 
 This releases reserved seats.
 
@@ -270,7 +270,7 @@ This releases reserved seats.
 
 | Method | Endpoint                            |
 | ------ | ----------------------------------- |
-| GET    | `/api/payments/{paymentId}/receipt` |
+| GET    | `/payments/{paymentId}/receipt` |
 
 ---
 
@@ -280,7 +280,7 @@ This releases reserved seats.
 
 | Method | Endpoint                   |
 | ------ | -------------------------- |
-| GET    | `/api/organizer/dashboard` |
+| GET    | `/organizer/dashboard` |
 
 Returns
 
@@ -348,10 +348,10 @@ Based **only on your finalized requirements**, this is the complete REST API lis
 
 | Method | Endpoint                              | Description               |
 | ------ | ------------------------------------- | ------------------------- |
-| POST   | `/api/auth/organizer/login`           | Organizer login           |
-| POST   | `/api/auth/organizer/logout`          | Organizer logout          |
-| POST   | `/api/auth/organizer/forgot-password` | Send password reset email |
-| POST   | `/api/auth/organizer/reset-password`  | Reset password            |
+| POST   | `/auth/organizer/login`           | Organizer login           |
+| POST   | `/auth/organizer/logout`          | Organizer logout          |
+| POST   | `/auth/organizer/forgot-password` | Send password reset email |
+| POST   | `/auth/organizer/reset-password`  | Reset password            |
 
 ---
 
@@ -359,10 +359,10 @@ Based **only on your finalized requirements**, this is the complete REST API lis
 
 | Method | Endpoint                          | Description               |
 | ------ | --------------------------------- | ------------------------- |
-| POST   | `/api/auth/admin/login`           | Admin login               |
-| POST   | `/api/auth/admin/logout`          | Admin logout              |
-| POST   | `/api/auth/admin/forgot-password` | Send password reset email |
-| POST   | `/api/auth/admin/reset-password`  | Reset password            |
+| POST   | `/auth/admin/login`           | Admin login               |
+| POST   | `/auth/admin/logout`          | Admin logout              |
+| POST   | `/auth/admin/forgot-password` | Send password reset email |
+| POST   | `/auth/admin/reset-password`  | Reset password            |
 
 ---
 
@@ -372,7 +372,7 @@ Public endpoint.
 
 | Method | Endpoint                   | Description           |
 | ------ | -------------------------- | --------------------- |
-| POST   | `/api/organizers/register` | Register as organizer |
+| POST   | `/organizers/register` | Register as organizer |
 
 ---
 
@@ -382,10 +382,10 @@ Public endpoint.
 
 | Method | Endpoint                                      | Description              |
 | ------ | --------------------------------------------- | ------------------------ |
-| GET    | `/api/admin/organizers`                       | View all organizers      |
-| GET    | `/api/admin/organizers/{organizerId}`         | View organizer details   |
-| PUT    | `/api/admin/organizers/{organizerId}`         | Update organizer details |
-| PATCH  | `/api/admin/organizers/{organizerId}/archive` | Archive organizer        |
+| GET    | `/admin/organizers`                       | View all organizers      |
+| GET    | `/admin/organizers/{organizerId}`         | View organizer details   |
+| PUT    | `/admin/organizers/{organizerId}`         | Update organizer details |
+| PATCH  | `/admin/organizers/{organizerId}/archive` | Archive organizer        |
 
 ---
 
@@ -395,8 +395,8 @@ Admin only views.
 
 | Method | Endpoint                      | Description        |
 | ------ | ----------------------------- | ------------------ |
-| GET    | `/api/admin/events`           | View all events    |
-| GET    | `/api/admin/events/{eventId}` | View event details |
+| GET    | `/admin/events`           | View all events    |
+| GET    | `/admin/events/{eventId}` | View event details |
 
 ---
 
@@ -404,10 +404,10 @@ Admin only views.
 
 | Method | Endpoint                             | Description     |
 | ------ | ------------------------------------ | --------------- |
-| POST   | `/api/admin/categories`              | Create category |
-| GET    | `/api/admin/categories`              | View categories |
-| PUT    | `/api/admin/categories/{categoryId}` | Update category |
-| DELETE | `/api/admin/categories/{categoryId}` | Delete category |
+| POST   | `/admin/categories`              | Create category |
+| GET    | `/admin/categories`              | View categories |
+| PUT    | `/admin/categories/{categoryId}` | Update category |
+| DELETE | `/admin/categories/{categoryId}` | Delete category |
 
 ---
 
@@ -415,10 +415,10 @@ Admin only views.
 
 | Method | Endpoint                        | Description   |
 | ------ | ------------------------------- | ------------- |
-| POST   | `/api/admin/coupons`            | Create coupon |
-| GET    | `/api/admin/coupons`            | View coupons  |
-| PUT    | `/api/admin/coupons/{couponId}` | Update coupon |
-| DELETE | `/api/admin/coupons/{couponId}` | Delete coupon |
+| POST   | `/admin/coupons`            | Create coupon |
+| GET    | `/admin/coupons`            | View coupons  |
+| PUT    | `/admin/coupons/{couponId}` | Update coupon |
+| DELETE | `/admin/coupons/{couponId}` | Delete coupon |
 
 ---
 
@@ -426,9 +426,9 @@ Admin only views.
 
 | Method | Endpoint                       | Description          |
 | ------ | ------------------------------ | -------------------- |
-| GET    | `/api/admin/reports/dashboard` | Platform statistics  |
-| GET    | `/api/admin/reports/monthly`   | Monthly report       |
-| GET    | `/api/admin/reports/category`  | Category-wise report |
+| GET    | `/admin/reports/dashboard` | Platform statistics  |
+| GET    | `/admin/reports/monthly`   | Monthly report       |
+| GET    | `/admin/reports/category`  | Category-wise report |
 
 ---
 
@@ -436,8 +436,8 @@ Admin only views.
 
 | Method | Endpoint                        | Description       |
 | ------ | ------------------------------- | ----------------- |
-| GET    | `/api/admin/audit-logs`         | View audit logs   |
-| GET    | `/api/admin/audit-logs/{logId}` | Audit log details |
+| GET    | `/admin/audit-logs`         | View audit logs   |
+| GET    | `/admin/audit-logs/{logId}` | Audit log details |
 
 ---
 
@@ -447,13 +447,13 @@ Admin only views.
 
 | Method | Endpoint                                             | Description         |
 | ------ | ---------------------------------------------------- | ------------------- |
-| POST   | `/api/organizer/events`                              | Create draft event  |
-| GET    | `/api/organizer/events`                              | View own events     |
-| GET    | `/api/organizer/events/{eventId}`                    | View event details  |
-| PUT    | `/api/organizer/events/{eventId}`                    | Edit event          |
-| PATCH  | `/api/organizer/events/{eventId}/open-registration`  | Make event public   |
-| PATCH  | `/api/organizer/events/{eventId}/close-registration` | Close registrations |
-| PATCH  | `/api/organizer/events/{eventId}/archive`            | Archive event       |
+| POST   | `/organizer/events`                              | Create draft event  |
+| GET    | `/organizer/events`                              | View own events     |
+| GET    | `/organizer/events/{eventId}`                    | View event details  |
+| PUT    | `/organizer/events/{eventId}`                    | Edit event          |
+| PATCH  | `/organizer/events/{eventId}/open-registration`  | Make event public   |
+| PATCH  | `/organizer/events/{eventId}/close-registration` | Close registrations |
+| PATCH  | `/organizer/events/{eventId}/archive`            | Archive event       |
 
 ---
 
@@ -461,7 +461,7 @@ Admin only views.
 
 | Method | Endpoint                                        | Description       |
 | ------ | ----------------------------------------------- | ----------------- |
-| GET    | `/api/organizer/events/{eventId}/registrations` | View participants |
+| GET    | `/organizer/events/{eventId}/registrations` | View participants |
 
 ---
 
@@ -469,7 +469,7 @@ Admin only views.
 
 | Method | Endpoint                                | Description        |
 | ------ | --------------------------------------- | ------------------ |
-| GET    | `/api/organizer/events/{eventId}/sales` | View sales summary |
+| GET    | `/organizer/events/{eventId}/sales` | View sales summary |
 
 ---
 
@@ -477,7 +477,7 @@ Admin only views.
 
 | Method | Endpoint                   | Description         |
 | ------ | -------------------------- | ------------------- |
-| GET    | `/api/organizer/dashboard` | Organizer dashboard |
+| GET    | `/organizer/dashboard` | Organizer dashboard |
 
 ---
 
@@ -487,8 +487,8 @@ Accessible without login.
 
 | Method | Endpoint                | Description            |
 | ------ | ----------------------- | ---------------------- |
-| GET    | `/api/events`           | View all public events |
-| GET    | `/api/events/{eventId}` | Event details          |
+| GET    | `/events`           | View all public events |
+| GET    | `/events/{eventId}` | Event details          |
 
 ---
 
@@ -496,7 +496,7 @@ Accessible without login.
 
 | Method | Endpoint             | Description          |
 | ------ | -------------------- | -------------------- |
-| GET    | `/api/events/search` | Search/filter events |
+| GET    | `/events/search` | Search/filter events |
 
 Supported filters:
 
@@ -512,7 +512,7 @@ Supported filters:
 Example
 
 ```http
-GET /api/events/search?city=Indore&category=Workshop&type=OFFLINE
+GET /events/search?city=Indore&category=Workshop&type=OFFLINE
 ```
 
 ---
@@ -525,7 +525,7 @@ No login required.
 
 | Method | Endpoint             | Description           |
 | ------ | -------------------- | --------------------- |
-| POST   | `/api/registrations` | Register for an event |
+| POST   | `/registrations` | Register for an event |
 
 This API:
 
@@ -533,7 +533,7 @@ This API:
 * validates coupon
 * reserves seats temporarily
 * creates pending registration
-* initiates Razorpay payment
+* initiates payment simulation page
 
 ---
 
@@ -541,7 +541,7 @@ This API:
 
 | Method | Endpoint                              | Description               |
 | ------ | ------------------------------------- | ------------------------- |
-| GET    | `/api/registrations/{registrationId}` | View registration details |
+| GET    | `/registrations/{registrationId}` | View registration details |
 
 ---
 
@@ -549,33 +549,24 @@ This API:
 
 | Method | Endpoint                | Description                            |
 | ------ | ----------------------- | -------------------------------------- |
-| POST   | `/api/coupons/validate` | Validate coupon and calculate discount |
+| POST   | `/coupons/validate` | Validate coupon and calculate discount |
 
 ---
 
 # 8. Payment APIs
 
-## Create Razorpay Order
 
-| Method | Endpoint                     | Description           |
-| ------ | ---------------------------- | --------------------- |
-| POST   | `/api/payments/create-order` | Create Razorpay order |
+Create a fake simulation page
+User selects seats
+        ↓
+Click "Proceed to Payment"
+        ↓
+Fake Payment Screen
+    ├── Success
+    └── Failure
+        ↓
+Backend updates booking
 
----
-
-## Verify Payment
-
-| Method | Endpoint               | Description              |
-| ------ | ---------------------- | ------------------------ |
-| POST   | `/api/payments/verify` | Verify payment signature |
-
-This API will:
-
-* confirm registration
-* permanently allocate seats
-* update coupon usage
-* generate receipt
-* write audit logs
 
 ---
 
@@ -583,7 +574,7 @@ This API will:
 
 | Method | Endpoint                | Description                                      |
 | ------ | ----------------------- | ------------------------------------------------ |
-| POST   | `/api/payments/failure` | Handle failed payment and release reserved seats |
+| POST   | `/payments/failure` | Handle failed payment and release reserved seats |
 
 ---
 
@@ -591,7 +582,7 @@ This API will:
 
 | Method | Endpoint                            | Description           |
 | ------ | ----------------------------------- | --------------------- |
-| GET    | `/api/payments/{paymentId}/receipt` | Download/view receipt |
+| GET    | `/payments/{paymentId}/receipt` | Download/view receipt |
 
 ---
 

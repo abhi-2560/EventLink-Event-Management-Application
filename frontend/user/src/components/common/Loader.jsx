@@ -1,19 +1,10 @@
-export default function Loader() {
-    return (
-        <div className="flex justify-center py-20">
+import { Loader2 } from 'lucide-react';
 
-            <div
-                className="
-                    h-10
-                    w-10
-                    animate-spin
-                    rounded-full
-                    border-4
-                    border-indigo-600
-                    border-t-transparent
-                "
-            />
-
-        </div>
-    );
+export default function Loader({ message = 'Loading...' }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted">
+      <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
+      <p className="text-sm">{message}</p>
+    </div>
+  );
 }

@@ -121,19 +121,25 @@ def serialize_payment(payment):
     return {
         "payment_id": str(payment.payment_id),
         "registration_id": str(payment.registration_id),
-        "razorpay_order_id": payment.razorpay_order_id,
+        "order_id": payment.razorpay_order_id,
         "receipt_number": payment.receipt_number,
         "event_title": payment.event_title,
+        "category_name": payment.category_name,
+        "organizer_name": payment.organizer_name,
         "buyer_name": payment.buyer_name,
+        "buyer_phone": payment.buyer_phone,
+        "buyer_email": payment.buyer_email,
         "ticket_price": str(payment.ticket_price) if payment.ticket_price is not None else None,
         "discount": str(payment.discount),
         "convenience_fee": str(payment.convenience_fee),
         "gateway_fee": str(payment.gateway_fee),
+        "platform_fee": str(payment.platform_fee) if payment.platform_fee is not None else "0",
         "amount": str(payment.amount),
         "payment_status": payment.payment_status,
         "failure_reason": payment.failure_reason,
         "initiated_at": _iso(payment.initiated_at),
         "completed_at": _iso(payment.completed_at),
+        "receipt_generated_at": _iso(payment.receipt_generated_at),
     }
 
 

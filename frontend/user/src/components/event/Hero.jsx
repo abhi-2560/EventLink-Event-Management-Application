@@ -1,44 +1,20 @@
-import { Link } from "react-router-dom";
-
-import Button from "../common/Button";
-import Container from "../common/Container";
+import Container from '../common/Container';
 
 export default function Hero() {
-    return (
-        <section className="bg-indigo-600 py-24 text-white">
-
-            <Container>
-
-                <div className="max-w-3xl">
-
-                    <h1 className="mb-6 text-5xl font-bold">
-
-                        Discover Amazing Events
-
-                    </h1>
-
-                    <p className="mb-8 text-lg text-indigo-100">
-
-                        Conferences, workshops,
-                        hackathons and seminars —
-                        all in one place.
-
-                    </p>
-
-                    <Link to="/events">
-
-                        <Button
-                            variant="secondary"
-                        >
-                            Explore Events
-                        </Button>
-
-                    </Link>
-
-                </div>
-
-            </Container>
-
-        </section>
-    );
+  return (
+    <section className="relative overflow-hidden bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 py-16 text-white sm:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.12),transparent_60%)]" />
+      <Container className="relative">
+        <p className="mb-3 text-sm font-medium uppercase tracking-widest text-brand-200">
+          Discover · Register · Experience
+        </p>
+        <h1 className="max-w-3xl font-display text-4xl leading-tight sm:text-5xl lg:text-6xl">
+          Find your next unforgettable event
+        </h1>
+        <p className="mt-4 max-w-xl text-lg text-brand-100">
+          Browse conferences, workshops, concerts and more. Register in minutes — no account required.
+        </p>
+      </Container>
+    </section>
+  );
 }

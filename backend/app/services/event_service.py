@@ -133,10 +133,19 @@ def archive_event(event_id) -> Event:
     return event
 
 
+def list_public_events():
+    """All published, non-archived events."""
+    return Event.query.filter(
+        Event.status == "PUBLISHED",
+        Event.archived_at.is_(None),
+    ).order_by(Event.start_datetime.asc()).all()
+
+
 def search_events(
     title: str | None = None,
     city: str | None = None,
     category_id=None,
+    category_name: str | None = None,
     event_type: str | None = None,
     organizer_name: str | None = None,
     keyword: str | None = None,
@@ -157,6 +166,8 @@ def search_events(
         query = query.filter(Event.city.ilike(f"%{city}%"))
     if category_id:
         query = query.filter(Event.category_id == category_id)
+    if category_name:
+        query = query.filter(Event.category_name.ilike(f"%{category_name}%"))
     if event_type:
         query = query.filter(Event.event_type == event_type)
     if organizer_name:

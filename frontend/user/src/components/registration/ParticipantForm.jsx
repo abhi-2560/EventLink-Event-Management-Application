@@ -1,153 +1,52 @@
-import {
-    useFieldArray,
-    useForm,
-} from "react-hook-form";
+import { useFieldArray, useFormContext } from 'react-hook-form';
+import Input from '../common/Input';
+import Button from '../common/Button';
+import { Plus, Trash2 } from 'lucide-react';
 
-import Button from "../common/Button";
+export default function ParticipantForm({ maxSeats }) {
+  const { register, control, formState: { errors } } = useFormContext();
+  const { fields, append, remove } = useFieldArray({ control, name: 'participants' });
 
-export default function ParticipantForm({
-    maxParticipants,
-    onNext,
-}) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">Participants</h3>
+        {fields.length < maxSeats && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => append({ name: '' })}
+          >
+            <Plus className="h-4 w-4" />
+            Add participant
+          </Button>
+        )}
+      </div>
 
-    const {
-        register,
-        handleSubmit,
-        control,
-    } = useForm({
-
-        defaultValues: {
-
-            participants: [
-                {
-                    name: "",
-                    age: "",
-                    gender: "",
-                },
-            ],
-
-        },
-
-    });
-
-    const {
-        fields,
-        append,
-        remove,
-    } = useFieldArray({
-
-        control,
-
-        name: "participants",
-
-    });
-
-    function submit(data) {
-        onNext(data.participants);
-    }
-
-    return (
-
-        <form
-            onSubmit={handleSubmit(
-                submit
-            )}
-        >
-
-            {fields.map((field, index) => (
-
-                <div
-                    key={field.id}
-                    className="mb-6 rounded-lg border p-5"
-                >
-
-                    <input
-                        {...register(
-                            `participants.${index}.name`
-                        )}
-                        placeholder="Participant Name"
-                        className="mb-3 w-full rounded border p-3"
-                    />
-
-                    <input
-                        {...register(
-                            `participants.${index}.age`
-                        )}
-                        placeholder="Age"
-                        className="mb-3 w-full rounded border p-3"
-                    />
-
-                    <select
-                        {...register(
-                            `participants.${index}.gender`
-                        )}
-                        className="w-full rounded border p-3"
-                    >
-
-                        <option value="">
-                            Select Gender
-                        </option>
-
-                        <option>
-                            Male
-                        </option>
-
-                        <option>
-                            Female
-                        </option>
-
-                        <option>
-                            Other
-                        </option>
-
-                    </select>
-
-                    {fields.length > 1 && (
-
-                        <button
-                            type="button"
-                            onClick={() =>
-                                remove(index)
-                            }
-                            className="mt-4 text-red-600"
-                        >
-                            Remove
-                        </button>
-
-                    )}
-
-                </div>
-
-            ))}
-
-            {fields.length <
-                maxParticipants && (
-
-                <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() =>
-                        append({
-                            name: "",
-                            age: "",
-                            gender: "",
-                        })
-                    }
-                >
-                    Add Participant
-                </Button>
-
-            )}
-
+      {fields.map((field, index) => (
+        <div key={field.id} className="flex items-start gap-3">
+          <div className="flex-1">
+            <Input
+              label={`Participant ${index + 1}`}
+              placeholder="Full name"
+              {...register(`participants.${index}.name`)}
+              error={errors.participants?.[index]?.name?.message}
+            />
+          </div>
+          {fields.length > 1 && (
             <Button
-                className="ml-3"
-                type="submit"
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="mt-7 text-danger"
+              onClick={() => remove(index)}
             >
-                Continue
+              <Trash2 className="h-4 w-4" />
             </Button>
-
-        </form>
-
-    );
-
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }

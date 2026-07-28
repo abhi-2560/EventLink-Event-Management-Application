@@ -1,9 +1,10 @@
 from flask import Flask
 
 from .config import Config
-from .extensions import db, migrate, jwt, init_razorpay
+from .extensions import db, migrate, jwt
 from .services.exceptions import ServiceError
 
+import os
 
 from flask_cors import CORS
 
@@ -11,18 +12,12 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    CORS(
-        app,
-        resources={r"/*": {"origins": "http://localhost:5173"}},
-        supports_credentials=True,
-    )
+    CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"]}})
 
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
-    init_razorpay(app)
 
-    # Import models so Alembic/Flask-Migrate can see them via db.metadata.
     from . import models  # noqa: F401
 
     register_error_handlers(app)

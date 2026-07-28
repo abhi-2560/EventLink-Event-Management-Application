@@ -1,87 +1,52 @@
-import {
-    useEffect,
-    useState,
-} from "react";
-
-import { useParams } from "react-router-dom";
-
-import Container from "@/components/common/Container";
-import Loader from "@/components/common/Loader";
-
-import EventBanner from "@/components/event/EventBanner";
-import EventInfo from "@/components/event/EventInfo";
-import OrganizerCard from "@/components/event/OrganizerCard";
-import RegistrationCard from "@/components/event/RegistrationCard";
-
-import { getEvent } from "@/api/eventApi";
+import { useParams, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowLeft } from 'lucide-react';
+import Container from '../../components/common/Container';
+import Loader from '../../components/common/Loader';
+import EventInfo from '../../components/event/EventInfo';
+import RegistrationCard from '../../components/event/RegistrationCard';
+import { getEvent } from '../../api/eventApi';
 
 export default function EventDetails() {
-    const { id } = useParams();
+  const { eventId } = useParams();
 
-    const [event, setEvent] =
-        useState(null);
+  const { data: event, isLoading, isError, error } = useQuery({
+    queryKey: ['event', eventId],
+    queryFn: () => getEvent(eventId),
+  });
 
-    const [loading, setLoading] =
-        useState(true);
-
-    useEffect(() => {
-        loadEvent();
-    }, []);
-
-    async function loadEvent() {
-        try {
-            const data =
-                await getEvent(id);
-
-            setEvent(data);
-        } catch (err) {
-            console.log(err);
-        }
-
-        setLoading(false);
-    }
-
-    if (loading)
-        return <Loader />;
-
+  if (isLoading) {
     return (
-        <>
-
-            <EventBanner
-                event={event}
-            />
-
-            <Container>
-
-                <div
-                    className="
-                        my-10
-                        grid
-                        gap-8
-                        lg:grid-cols-3
-                    "
-                >
-
-                    <div className="space-y-8 lg:col-span-2">
-
-                        <EventInfo
-                            event={event}
-                        />
-
-                        <OrganizerCard
-                            event={event}
-                        />
-
-                    </div>
-
-                    <RegistrationCard
-                        event={event}
-                    />
-
-                </div>
-
-            </Container>
-
-        </>
+      <Container className="py-16">
+        <Loader message="Loading event..." />
+      </Container>
     );
+  }
+
+  if (isError || !event) {
+    return (
+      <Container className="py-16">
+        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error?.message || 'Event not found'}</p>
+        <Link to="/" className="mt-4 inline-flex items-center gap-2 text-sm text-brand-600 hover:underline">
+          <ArrowLeft className="h-4 w-4" /> Back to events
+        </Link>
+      </Container>
+    );
+  }
+
+  return (
+    <Container className="py-10">
+      <Link to="/" className="mb-6 inline-flex items-center gap-2 text-sm text-muted hover:text-brand-600">
+        <ArrowLeft className="h-4 w-4" /> All events
+      </Link>
+      <div className="grid gap-10 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <EventInfo event={event} />
+        </div>
+        <div>
+          <RegistrationCard event={event} />
+        </div>
+      </div>
+    </Container>
+  );
 }

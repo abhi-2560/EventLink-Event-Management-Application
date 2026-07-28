@@ -2,18 +2,8 @@
 Registrant-facing booking flow. No auth - registrants are identified by
 contact info per booking, not an account.
 
-Flow: create_seat_hold() -> (optional) apply_coupon() -> checkout via
-payment_service.create_razorpay_order() -> webhook calls
-confirm_registration() or fail_registration().
-
-No Celery: expired holds are reclaimed lazily. release_expired_holds()
-runs at the top of create_seat_hold() for the specific event being
-booked, so seats only get reclaimed exactly when someone else wants
-them - see the earlier discussion on why this beats a scheduler for
-this scale. Wire it to APScheduler as a periodic backstop too if you
-want stale RESERVED rows cleaned up even without new demand; the
-function is safe to call repeatedly and does nothing if there's
-nothing expired.
+Flow: create_registration() -> payment simulation -> verify_payment() or
+handle_failure().
 """
 
 from __future__ import annotations
@@ -60,17 +50,20 @@ def release_expired_holds(event_id):
         )
 
 
-def create_seat_hold(
+def create_registration(
     event_id,
     registrant_name: str,
     registrant_phone: str,
     seats_booked: int,
     registrant_email: str | None = None,
+    coupon_code: str | None = None,
 ):
     if seats_booked <= 0:
         raise ValidationError("seats_booked must be at least 1")
     if not registrant_phone:
         raise ValidationError("Contact phone is required")
+    if not registrant_name:
+        raise ValidationError("Contact name is required")
 
     release_expired_holds(event_id)
 
@@ -80,7 +73,6 @@ def create_seat_hold(
     if event.registration_status != "OPEN":
         raise ConflictError("Registration is closed for this event")
 
-    # Atomic, uncommitted - folded into the registration insert's commit below.
     try:
         event_service.reserve_seats(event_id, seats_booked)
     except Exception:
@@ -90,7 +82,19 @@ def create_seat_hold(
     ticket_price = Decimal(0) if event.is_free else event.ticket_price
     convenience_fee = event.convenience_fee or Decimal(0)
     gateway_fee = event.gateway_fee or Decimal(0)
-    total_amount = (ticket_price * seats_booked) + convenience_fee + gateway_fee
+    discount = Decimal(0)
+    coupon_id = None
+    applied_code = None
+
+    if coupon_code:
+        coupon = coupon_service.validate(coupon_code)
+        discount = coupon.flat_discount
+        coupon_id = coupon.coupon_id
+        applied_code = coupon.code
+        coupon_service.redeem(coupon.coupon_id, discount)
+
+    subtotal = (ticket_price * seats_booked) + convenience_fee + gateway_fee
+    total_amount = max(subtotal - discount, Decimal(0))
 
     registration = _registration_repo.create(
         event_id=event.event_id,
@@ -106,9 +110,12 @@ def create_seat_hold(
         registrant_phone=registrant_phone,
         seats_booked=seats_booked,
         ticket_price=ticket_price,
+        discount_amount=discount,
         convenience_fee=convenience_fee,
         gateway_fee=gateway_fee,
         total_amount=total_amount,
+        coupon_id=coupon_id,
+        coupon_code=applied_code,
         reservation_expires_at=datetime.now(timezone.utc) + HOLD_DURATION,
     )
 
@@ -126,7 +133,21 @@ def create_seat_hold(
         entity_id=event_id,
         new_value={"seats_booked": seats_booked},
     )
-    return registration
+
+    if applied_code:
+        log_action(
+            actor_type="SYSTEM",
+            action="Coupon Applied",
+            entity_type="coupon",
+            entity_id=coupon_id,
+            entity_name=applied_code,
+            new_value={"registration_id": str(registration.registration_id), "discount": str(discount)},
+        )
+
+    from . import payment_service
+    payment, order_id = payment_service.create_order(registration.registration_id)
+
+    return registration, payment, order_id
 
 
 def get_registration(registration_id):
@@ -147,7 +168,6 @@ def apply_coupon(registration_id, code: str):
     coupon = coupon_service.validate(code)
     discount = coupon.flat_discount
 
-    # Atomic, uncommitted - folded into the registration update below.
     coupon_service.redeem(coupon.coupon_id, discount)
 
     registration.coupon_id = coupon.coupon_id
