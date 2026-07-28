@@ -28,7 +28,7 @@ def update_organizer(organizer_id):
     return jsonify(serialize_organizer(organizer)), 200
 
 
-@admin_bp.route("/organizers/<organizer_id>/archive", methods=["POST"])
+@admin_bp.route("/organizers/<organizer_id>/archive", methods=["PATCH", "POST"])
 @admin_required
 def archive_organizer(organizer_id):
     organizer = admin_service.archive_organizer(g.current_admin_id, organizer_id)

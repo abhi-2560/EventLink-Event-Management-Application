@@ -192,3 +192,32 @@ def update_category(category_id, payload: dict):
         event_service.cascade_category_snapshot(category)
 
     return category
+
+
+def delete_category(category_id):
+    category = _category_repo.get_by_id(category_id)
+    if category is None:
+        raise NotFoundError("Category not found")
+    if (category.total_events or 0) > 0:
+        raise ConflictError("Cannot delete category with existing events")
+    _category_repo.delete(category)
+    return category
+
+
+def archive_category(admin_id, category_id):
+    """Soft-archive by renaming default categories; delete only when unused."""
+    category = _category_repo.get_by_id(category_id)
+    if category is None:
+        raise NotFoundError("Category not found")
+    if (category.total_events or 0) > 0:
+        category.description = (category.description or "") + " [ARCHIVED]"
+        category.is_default = False
+        _category_repo.update()
+    else:
+        _category_repo.delete(category)
+
+    log_action(
+        actor_type="ADMIN", actor_id=admin_id, action="Category Deleted",
+        entity_type="category", entity_id=category_id, entity_name=category.name,
+    )
+    return category

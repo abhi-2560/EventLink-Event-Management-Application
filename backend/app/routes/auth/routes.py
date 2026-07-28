@@ -8,6 +8,58 @@ from app.utils.serializers import serialize_organizer
 auth_bp = Blueprint("auth", __name__)
 
 
+@auth_bp.route("/admin/login", methods=["POST"])
+def admin_login():
+    data = request.get_json(silent=True) or {}
+    email = data.get("email")
+    password = data.get("password")
+    if not email or not password:
+        raise ValidationError("email and password are required")
+
+    actor = auth_service.authenticate("admin", email, password, ip_address=request.remote_addr)
+    token = create_access_token(
+        identity=str(actor.admin_id),
+        additional_claims={"actor_type": "admin", "email": actor.email, "name": actor.name},
+    )
+    return jsonify({"access_token": token, "actor_type": "admin"}), 200
+
+
+@auth_bp.route("/admin/logout", methods=["POST"])
+@jwt_required()
+def admin_logout():
+    claims = get_jwt()
+    if claims.get("actor_type") != "admin":
+        raise ValidationError("Admin access required")
+    auth_service.logout(
+        actor_type="admin",
+        actor_id=get_jwt_identity(),
+        actor_email=claims.get("email"),
+        ip_address=request.remote_addr,
+    )
+    return jsonify({"message": "Logged out"}), 200
+
+
+@auth_bp.route("/admin/forgot-password", methods=["POST"])
+def admin_forgot_password():
+    data = request.get_json(silent=True) or {}
+    email = data.get("email")
+    if not email:
+        raise ValidationError("email is required")
+    auth_service.request_password_reset("admin", email, current_app.config["SECRET_KEY"])
+    return jsonify({"message": "If that email exists, a reset link has been sent."}), 200
+
+
+@auth_bp.route("/admin/reset-password", methods=["POST"])
+def admin_reset_password():
+    data = request.get_json(silent=True) or {}
+    token = data.get("token")
+    new_password = data.get("new_password")
+    if not token or not new_password:
+        raise ValidationError("token and new_password are required")
+    auth_service.confirm_password_reset(token, new_password, current_app.config["SECRET_KEY"])
+    return jsonify({"message": "Password updated"}), 200
+
+
 @auth_bp.route("/organizer/login", methods=["POST"])
 def organizer_login():
     data = request.get_json(silent=True) or {}

@@ -12,7 +12,11 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"]}})
+    CORS(app, resources={r"/*": {"origins": [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+    ]}})
 
     db.init_app(app)
     migrate.init_app(app, db)

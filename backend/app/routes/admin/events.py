@@ -28,7 +28,7 @@ def update_event(event_id):
     return jsonify(serialize_event(event, include_internal=True)), 200
 
 
-@admin_bp.route("/events/<event_id>/archive", methods=["POST"])
+@admin_bp.route("/events/<event_id>/archive", methods=["PATCH", "POST"])
 @admin_required
 def archive_event(event_id):
     event = admin_service.archive_event(g.current_admin_id, event_id)
