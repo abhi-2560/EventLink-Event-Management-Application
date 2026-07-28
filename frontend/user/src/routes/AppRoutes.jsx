@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import PublicLayout from '../layouts/PublicLayout';
+import OrganizerRoutes from './OrganizerRoutes';
 import Home from '../pages/public/Home';
 import EventDetails from '../pages/public/EventDetails';
 import Register from '../pages/registration/Register';
@@ -16,8 +17,9 @@ export default function AppRoutes() {
         <Route path="events/:eventId/register" element={<Register />} />
         <Route path="payment/:registrationId" element={<Payment />} />
         <Route path="receipt/:paymentId" element={<Receipt />} />
-        <Route path="*" element={<NotFound />} />
       </Route>
+      <Route path="organizer/*" element={<OrganizerRoutes />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

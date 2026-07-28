@@ -93,8 +93,8 @@ def serialize_event(event, include_internal=False):
     return data
 
 
-def serialize_registration(registration):
-    return {
+def serialize_registration(registration, payment=None):
+    data = {
         "registration_id": str(registration.registration_id),
         "event_id": str(registration.event_id),
         "event_title": registration.event_title,
@@ -115,6 +115,12 @@ def serialize_registration(registration):
         "created_at": _iso(registration.created_at),
         "confirmed_at": _iso(registration.confirmed_at),
     }
+    if payment is not None:
+        data["payment_id"] = str(payment.payment_id)
+        data["payment_status"] = payment.payment_status
+        data["receipt_number"] = payment.receipt_number
+        data["receipt_available"] = payment.payment_status == "SUCCESS" and payment.receipt_number is not None
+    return data
 
 
 def serialize_payment(payment):

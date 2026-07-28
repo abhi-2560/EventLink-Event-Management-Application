@@ -14,6 +14,7 @@ export default function Navbar() {
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium text-gray-600 sm:flex">
           <Link to="/" className="transition-colors hover:text-brand-600">Events</Link>
+          <Link to="/organizer/login" className="transition-colors hover:text-brand-600">Organizer</Link>
         </nav>
       </Container>
     </header>

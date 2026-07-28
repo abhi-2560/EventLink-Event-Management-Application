@@ -1,7 +1,8 @@
 from flask import g, jsonify
 
 from app.middleware import organizer_required
-from app.services import organizer_service
+from app.services import organizer_report_service, organizer_service
+from app.utils.serializers import serialize_payment
 from . import organizer_bp
 
 
@@ -9,6 +10,21 @@ from . import organizer_bp
 @organizer_required
 def total_sales():
     return jsonify({"total_sales": str(organizer_service.get_total_sales(g.current_organizer_id))}), 200
+
+
+@organizer_bp.route("/sales/summary", methods=["GET"])
+@organizer_required
+def sales_summary():
+    organizer_id = g.current_organizer_id
+    from app.repositories.organizer_repository import OrganizerRepository
+    organizer = OrganizerRepository().get_by_id(organizer_id)
+    transactions = organizer_report_service.get_organizer_recent_transactions(organizer_id, limit=20)
+    return jsonify({
+        "total_sales": str(organizer.total_sales or 0),
+        "total_registrations": organizer.total_registrations or 0,
+        "total_tickets_sold": organizer.total_tickets_sold or 0,
+        "recent_transactions": [serialize_payment(p) for p in transactions],
+    }), 200
 
 
 @organizer_bp.route("/events/<event_id>/sales", methods=["GET"])
