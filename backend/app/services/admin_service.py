@@ -134,7 +134,15 @@ def update_event(admin_id, event_id, payload: dict):
 
 
 def archive_event(admin_id, event_id):
+    before = event_service.get_event(event_id)
     event = event_service.archive_event(event_id)
+
+    if before.archived_at is None:
+        category = _category_repo.get_by_id(before.category_id)
+        if category is not None and (category.total_events or 0) > 0:
+            category.total_events -= 1
+            _category_repo.update()
+
     log_action(
         actor_type="ADMIN",
         actor_id=admin_id,
@@ -148,7 +156,15 @@ def archive_event(admin_id, event_id):
 
 def hard_delete_event(admin_id, event_id):
     """Same caveat as hard_delete_organizer - see that function's docstring."""
+    before = event_service.get_event(event_id)
     event = event_service.archive_event(event_id)
+
+    if before.archived_at is None:
+        category = _category_repo.get_by_id(before.category_id)
+        if category is not None and (category.total_events or 0) > 0:
+            category.total_events -= 1
+            _category_repo.update()
+
     log_action(
         actor_type="ADMIN",
         actor_id=admin_id,

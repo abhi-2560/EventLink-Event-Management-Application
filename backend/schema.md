@@ -10,6 +10,13 @@ Table "admin" {
   "updated_at" TIMESTAMPTZ [default: `now()`]
 }
 
+Table "platform_settings" {
+  "id" INT [pk, default: 1, check: `id = 1`]
+  "convenience_fee" NUMERIC(10,2) [not null, default: 0, check: `convenience_fee >= 0`]
+  "gateway_fee" NUMERIC(10,2) [not null, default: 0, check: `gateway_fee >= 0`]
+  "updated_at" TIMESTAMPTZ [default: `now()`]
+}
+
 Table "organizer" {
   "organizer_id" UUID [pk, default: `gen_random_uuid()`]
   "organization_name" TEXT [not null]
@@ -117,8 +124,6 @@ Table "event" {
   "keywords" "TEXT[]"
   "ticket_price" NUMERIC(10,2) [default: 0, check: `ticket_price >= 0`]
   "is_free" BOOLEAN [default: false, check: `(NOT is_free) OR ticket_price = 0`]
-  "convenience_fee" NUMERIC(10,2) [default: 0, check: `convenience_fee >= 0`]
-  "gateway_fee" NUMERIC(10,2) [default: 0, check: `gateway_fee >= 0`]
   "capacity" INT [not null, check: `capacity > 0`]
   "available_seats" INT [not null, check: `available_seats >= 0 AND available_seats <= capacity`]
   "total_registrations" INT [default: 0, check: `total_registrations >= 0`]

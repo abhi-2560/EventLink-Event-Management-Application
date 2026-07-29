@@ -52,7 +52,16 @@ def serialize_category(category):
     }
 
 
-def serialize_event(event, include_internal=False):
+def serialize_event(event, include_internal=False, use_platform_fees=False):
+    if use_platform_fees:
+        from app.services import platform_settings_service
+        fees = platform_settings_service.get_fees()
+        convenience_fee = fees["convenience_fee"]
+        gateway_fee = fees["gateway_fee"]
+    else:
+        convenience_fee = 0
+        gateway_fee = 0
+
     data = {
         "event_id": str(event.event_id),
         "organizer_id": str(event.organizer_id) if event.organizer_id else None,
@@ -70,8 +79,8 @@ def serialize_event(event, include_internal=False):
         "keywords": event.keywords,
         "ticket_price": str(event.ticket_price),
         "is_free": event.is_free,
-        "convenience_fee": str(event.convenience_fee),
-        "gateway_fee": str(event.gateway_fee),
+        "convenience_fee": str(convenience_fee),
+        "gateway_fee": str(gateway_fee),
         "capacity": event.capacity,
         "available_seats": event.available_seats,
         "registration_start": _iso(event.registration_start),
@@ -159,6 +168,8 @@ def serialize_coupon(coupon):
         "expiry_date": _iso(coupon.expiry_date),
         "times_used": coupon.times_used,
         "total_discount_given": str(coupon.total_discount_given),
+        "created_at": _iso(coupon.created_at),
+        "updated_at": _iso(coupon.updated_at),
     }
 
 

@@ -22,6 +22,16 @@ def dashboard():
     return jsonify(data), 200
 
 
+@organizer_bp.route("/reports/period", methods=["GET"])
+@organizer_required
+def period_report():
+    start_date, end_date = _parse_dates()
+    data = organizer_report_service.get_organizer_period_summary(
+        g.current_organizer_id, start_date, end_date
+    )
+    return jsonify(data), 200
+
+
 @organizer_bp.route("/reports/monthly", methods=["GET"])
 @organizer_required
 def monthly_report():

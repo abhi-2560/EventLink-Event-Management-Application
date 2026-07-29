@@ -6,12 +6,13 @@ import { useState } from 'react';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../context/AuthContext';
 import { logoutOrganizer } from '../../api/authApi';
+import { showSuccess } from '../../utils/toast';
 
 const links = [
   { to: '/organizer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/organizer/events', label: 'My Events', icon: CalendarDays },
   { to: '/organizer/events/new', label: 'Create Event', icon: PlusCircle },
-  { to: '/organizer/sales', label: 'Sales Report', icon: TrendingUp },
+  { to: '/organizer/sales', label: 'Period Report', icon: TrendingUp },
   { to: '/organizer/profile', label: 'Profile', icon: User },
 ];
 
@@ -23,6 +24,7 @@ export default function OrganizerSidebar() {
   const handleLogout = async () => {
     try { await logoutOrganizer(); } catch { /* ignore */ }
     logout();
+    showSuccess('Signed out successfully');
     navigate('/organizer/login');
   };
 

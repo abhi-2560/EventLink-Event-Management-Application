@@ -14,11 +14,6 @@ export const registrationSchema = z.object({
     .or(z.literal('')),
   seats_booked: z.coerce.number().int().min(1, 'Book at least 1 seat'),
   coupon_code: z.string().optional(),
-  participants: z.array(
-    z.object({
-      name: z.string().min(2, 'Participant name required'),
-    }),
-  ).min(1, 'Add at least one participant'),
 });
 
 export function buildRegistrationDefaults(availableSeats = 1) {
@@ -26,8 +21,7 @@ export function buildRegistrationDefaults(availableSeats = 1) {
     registrant_name: '',
     registrant_phone: '',
     registrant_email: '',
-    seats_booked: 1,
+    seats_booked: Math.min(1, availableSeats),
     coupon_code: '',
-    participants: [{ name: '' }],
   };
 }

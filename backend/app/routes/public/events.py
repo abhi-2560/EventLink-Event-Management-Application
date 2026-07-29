@@ -41,17 +41,17 @@ def _parse_search_args(args):
 @public_bp.route("/events", methods=["GET"])
 def list_events():
     events = event_service.list_public_events()
-    return jsonify([serialize_event(e) for e in events]), 200
+    return jsonify([serialize_event(e, use_platform_fees=True) for e in events]), 200
 
 
 @public_bp.route("/events/search", methods=["GET"])
 def search_events():
     filters = _parse_search_args(request.args)
     events = event_service.search_events(**filters)
-    return jsonify([serialize_event(e) for e in events]), 200
+    return jsonify([serialize_event(e, use_platform_fees=True) for e in events]), 200
 
 
 @public_bp.route("/events/<event_id>", methods=["GET"])
 def get_event(event_id):
     event = event_service.get_public_event(event_id)
-    return jsonify(serialize_event(event)), 200
+    return jsonify(serialize_event(event, use_platform_fees=True)), 200

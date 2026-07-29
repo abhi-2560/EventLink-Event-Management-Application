@@ -10,6 +10,7 @@ import Button from '../../components/common/Button';
 import { getRegistration } from '../../api/registrationApi';
 import { verifyPayment, failPayment, createPaymentOrder } from '../../api/paymentApi';
 import { useRegistration } from '../../context/RegistrationContext';
+import { showError, showSuccess } from '../../utils/toast';
 
 export default function Payment() {
   const { registrationId } = useParams();
@@ -41,7 +42,9 @@ export default function Payment() {
       const payment = await verifyPayment(registrationId, activeOrderId);
       setResult(payment);
       setRegistration({ ...registration, ...payment });
+      showSuccess('Payment successful');
     } catch (err) {
+      showError(err);
       setFailureMsg(err.message);
     } finally {
       setLoading(false);
@@ -53,6 +56,7 @@ export default function Payment() {
     setFailureMsg('');
     try {
       await failPayment(registrationId, 'User simulated payment failure');
+      showError('Payment failed. Your seat reservation has been released.');
       navigate(`/events/${registration?.event_id}`, {
         state: { message: 'Payment failed. Your seat reservation has been released.' },
       });

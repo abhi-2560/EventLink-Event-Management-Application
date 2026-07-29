@@ -12,11 +12,11 @@ class CouponRepository(BaseRepository):
     def get_by_code(self, code):
         return Coupon.query.filter_by(code=code).first()
 
-    def code_exists(self, code):
-        return (
-            Coupon.query.filter_by(code=code).first()
-            is not None
-        )
+    def code_exists(self, code, exclude_id=None):
+        query = Coupon.query.filter(Coupon.code == code)
+        if exclude_id is not None:
+            query = query.filter(Coupon.coupon_id != exclude_id)
+        return query.first() is not None
 
     def get_active_coupons(self):
         return Coupon.query.filter_by(

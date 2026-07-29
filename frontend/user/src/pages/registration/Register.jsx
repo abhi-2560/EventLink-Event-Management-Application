@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
@@ -8,7 +8,6 @@ import Container from '../../components/common/Container';
 import Loader from '../../components/common/Loader';
 import Button from '../../components/common/Button';
 import ContactForm from '../../components/registration/ContactForm';
-import ParticipantForm from '../../components/registration/ParticipantForm';
 import RegistrationSummary from '../../components/registration/RegistrationSummary';
 import Input from '../../components/common/Input';
 import { getEvent } from '../../api/eventApi';
@@ -16,6 +15,7 @@ import { createRegistration } from '../../api/registrationApi';
 import { validateCoupon } from '../../api/paymentApi';
 import { useRegistration } from '../../context/RegistrationContext';
 import { registrationSchema, buildRegistrationDefaults } from '../../schemas/registrationSchema';
+import { showError, showSuccess } from '../../utils/toast';
 
 export default function Register() {
   const { eventId } = useParams();
@@ -29,32 +29,42 @@ export default function Register() {
     queryFn: () => getEvent(eventId),
   });
 
-  const methods = useForm({
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm({
     resolver: zodResolver(registrationSchema),
     defaultValues: buildRegistrationDefaults(),
   });
 
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = methods;
   const seats = watch('seats_booked');
   const couponCode = watch('coupon_code');
 
   useEffect(() => {
-    setValue('seats_booked', Math.min(Math.max(seats, 1), event?.available_seats || 1));
+    if (!event?.available_seats) return;
+    setValue('seats_booked', Math.min(Math.max(seats, 1), event.available_seats));
   }, [seats, event?.available_seats, setValue]);
+
+  useEffect(() => {
+    setCouponPreview(null);
+    setCouponError('');
+  }, [seats]);
 
   const registrationMutation = useMutation({
     mutationFn: createRegistration,
     onSuccess: (data) => {
       setRegistration(data);
+      showSuccess('Registration created. Proceed to payment.');
       navigate(`/payment/${data.registration_id}`);
     },
+    onError: showError,
   });
 
   const onSubmit = (formData) => {
     if (formData.seats_booked > event.available_seats) {
-      methods.setError('seats_booked', {
-        message: `Only ${event.available_seats} seats available. Please reduce your booking.`,
-      });
       return;
     }
 
@@ -107,69 +117,60 @@ export default function Register() {
       <h1 className="font-display text-3xl text-gray-900">Register for {event.title}</h1>
       <p className="mt-2 text-muted">{event.available_seats} seats available</p>
 
-      <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 grid gap-8 lg:grid-cols-3">
-          <div className="space-y-8 lg:col-span-2">
-            <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
-              <ContactForm register={register} errors={errors} />
-            </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 grid gap-8 lg:grid-cols-3">
+        <div className="space-y-8 lg:col-span-2">
+          <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+            <ContactForm register={register} errors={errors} />
+          </div>
 
-            <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
-              <div className="mb-4">
+          <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+            <Input
+              label="Number of seats"
+              required
+              type="number"
+              min={1}
+              max={event.available_seats}
+              {...register('seats_booked', { valueAsNumber: true })}
+              error={errors.seats_booked?.message}
+            />
+          </div>
+
+          <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900">Coupon code</h3>
+            <div className="mt-4 flex gap-3">
+              <div className="flex-1">
                 <Input
-                  label="Number of seats"
-                  type="number"
-                  min={1}
-                  max={event.available_seats}
-                  {...register('seats_booked', { valueAsNumber: true })}
-                  error={errors.seats_booked?.message}
+                  placeholder="Enter coupon code"
+                  {...register('coupon_code')}
                 />
               </div>
-              <ParticipantForm maxSeats={event.available_seats} />
+              <Button type="button" variant="secondary" onClick={handleApplyCoupon}>
+                Apply
+              </Button>
             </div>
-
-            <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900">Coupon code</h3>
-              <div className="mt-4 flex gap-3">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Enter coupon code"
-                    {...register('coupon_code')}
-                  />
-                </div>
-                <Button type="button" variant="secondary" onClick={handleApplyCoupon}>
-                  Apply
-                </Button>
-              </div>
-              {couponError && <p className="mt-2 text-xs text-danger">{couponError}</p>}
-              {couponPreview && (
-                <p className="mt-2 text-xs text-success">
-                  Coupon applied: -{couponPreview.discount} off (final: {couponPreview.final_amount})
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <RegistrationSummary
-              event={event}
-              seats={seats}
-              couponPreview={couponPreview}
-              totalAmount={couponPreview?.final_amount}
-            />
-
-            {registrationMutation.isError && (
-              <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-                {registrationMutation.error.message}
+            {couponError && <p className="mt-2 text-xs text-danger">{couponError}</p>}
+            {couponPreview && (
+              <p className="mt-2 text-xs text-success">
+                Coupon applied: -{couponPreview.discount} off (final: {couponPreview.final_amount})
               </p>
             )}
-
-            <Button type="submit" size="lg" className="w-full" loading={registrationMutation.isPending}>
-              Proceed to Payment
-            </Button>
           </div>
-        </form>
-      </FormProvider>
+        </div>
+
+        <div className="space-y-6">
+          <RegistrationSummary
+            event={event}
+            seats={seats}
+            couponPreview={couponPreview}
+            totalAmount={couponPreview?.final_amount}
+          />
+
+
+          <Button type="submit" size="lg" className="w-full" loading={registrationMutation.isPending}>
+            Proceed to Payment
+          </Button>
+        </div>
+      </form>
     </Container>
   );
 }

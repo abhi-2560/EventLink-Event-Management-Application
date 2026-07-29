@@ -13,12 +13,11 @@ export const eventSchema = z.object({
   keywords: z.string().optional(),
   ticket_price: z.coerce.number().min(0, 'Price must be 0 or more'),
   is_free: z.boolean(),
-  convenience_fee: z.coerce.number().min(0).optional(),
-  gateway_fee: z.coerce.number().min(0).optional(),
   capacity: z.coerce.number().int().min(1, 'Capacity must be at least 1'),
   registration_start: z.string().optional(),
   registration_end: z.string().optional(),
   start_datetime: z.string().min(1, 'Start date is required'),
+  registration_status: z.enum(['OPEN', 'CLOSED']).optional(),
 }).superRefine((data, ctx) => {
   if (data.event_type === 'OFFLINE' && !data.city) {
     ctx.addIssue({ code: 'custom', message: 'City is required for offline events', path: ['city'] });
@@ -46,14 +45,36 @@ export const passwordSchema = z.object({
   path: ['confirm_password'],
 });
 
+const strongPassword = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[a-z]/, 'Must include a lowercase letter')
+  .regex(/[A-Z]/, 'Must include an uppercase letter')
+  .regex(/[0-9]/, 'Must include a number');
+
+export const signupSchema = z.object({
+  organizer_name: z.string().min(2, 'Organization name is required'),
+  contact_person: z.string().min(2, 'Contact person is required'),
+  email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
+  phone: z
+    .string()
+    .min(10, 'Enter a valid phone number')
+    .max(15, 'Phone number is too long')
+    .regex(/^[0-9+\-\s()]+$/, 'Invalid phone number'),
+  password: strongPassword,
+  confirm_password: z.string().min(1, 'Confirm your password'),
+}).refine((d) => d.password === d.confirm_password, {
+  message: 'Passwords do not match',
+  path: ['confirm_password'],
+});
+
 export function eventToFormDefaults(event) {
   if (!event) {
     return {
       title: '', description: '', category_id: '', event_type: 'OFFLINE',
       venue: '', city: '', state: '', country: 'India', meeting_link: '',
-      keywords: '', ticket_price: 0, is_free: false, convenience_fee: 0,
-      gateway_fee: 0, capacity: 100, registration_start: '', registration_end: '',
-      start_datetime: '',
+      keywords: '', ticket_price: 0, is_free: false, capacity: 100, registration_start: '', registration_end: '',
+      start_datetime: '', registration_status: 'OPEN',
     };
   }
   return {
@@ -69,12 +90,11 @@ export function eventToFormDefaults(event) {
     keywords: (event.keywords || []).join(', '),
     ticket_price: Number(event.ticket_price || 0),
     is_free: event.is_free || false,
-    convenience_fee: Number(event.convenience_fee || 0),
-    gateway_fee: Number(event.gateway_fee || 0),
     capacity: event.capacity || 100,
     registration_start: event.registration_start?.slice(0, 16) || '',
     registration_end: event.registration_end?.slice(0, 16) || '',
     start_datetime: event.start_datetime?.slice(0, 16) || '',
+    registration_status: event.registration_status || 'OPEN',
   };
 }
 
@@ -95,11 +115,10 @@ export function formToEventPayload(data) {
     keywords: keywords.length ? keywords : undefined,
     ticket_price: data.is_free ? 0 : data.ticket_price,
     is_free: data.is_free,
-    convenience_fee: data.convenience_fee || 0,
-    gateway_fee: data.gateway_fee || 0,
     capacity: data.capacity,
     registration_start: data.registration_start ? new Date(data.registration_start).toISOString() : undefined,
     registration_end: data.registration_end ? new Date(data.registration_end).toISOString() : undefined,
     start_datetime: new Date(data.start_datetime).toISOString(),
+    registration_status: data.registration_status,
   };
 }

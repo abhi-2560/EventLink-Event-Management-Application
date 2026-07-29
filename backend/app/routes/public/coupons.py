@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from flask import jsonify, request
 
-from app.services import coupon_service, event_service
+from app.services import coupon_service, event_service, platform_settings_service
 from app.services.exceptions import ValidationError
 from . import public_bp
 
@@ -25,8 +25,9 @@ def validate_coupon():
     event = event_service.get_public_event(event_id)
 
     ticket_price = Decimal(0) if event.is_free else event.ticket_price
-    convenience_fee = event.convenience_fee or Decimal(0)
-    gateway_fee = event.gateway_fee or Decimal(0)
+    fees = platform_settings_service.get_fees()
+    convenience_fee = fees["convenience_fee"]
+    gateway_fee = fees["gateway_fee"]
     subtotal = (ticket_price * seat_count) + convenience_fee + gateway_fee
     discount = coupon.flat_discount
     final_amount = max(subtotal - discount, Decimal(0))

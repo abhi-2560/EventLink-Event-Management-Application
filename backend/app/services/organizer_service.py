@@ -10,6 +10,7 @@ being re-implemented slightly differently in five different routes.
 from __future__ import annotations
 
 from app.models import Event
+from app.repositories.category_repository import CategoryRepository
 from app.repositories.event_repository import EventRepository
 from app.repositories.organizer_repository import OrganizerRepository
 from app.repositories.registration_repository import RegistrationRepository
@@ -20,6 +21,7 @@ from .exceptions import ForbiddenError, NotFoundError
 _event_repo = EventRepository()
 _organizer_repo = OrganizerRepository()
 _registration_repo = RegistrationRepository()
+_category_repo = CategoryRepository()
 
 
 def _owns_event(organizer_id, event_id) -> Event:
@@ -48,6 +50,11 @@ def create_event(organizer_id, payload: dict) -> Event:
     organizer.active_events = (organizer.active_events or 0) + 1
     _organizer_repo.update()
 
+    category = _category_repo.get_by_id(event.category_id)
+    if category is not None:
+        category.total_events = (category.total_events or 0) + 1
+        _category_repo.update()
+
     log_action(
         actor_type="ORGANIZER",
         actor_id=organizer_id,
@@ -65,7 +72,10 @@ def get_own_event(organizer_id, event_id) -> Event:
 
 def update_event(organizer_id, event_id, payload: dict) -> Event:
     _owns_event(organizer_id, event_id)
+    new_capacity = payload.pop("capacity", None)
     event = event_service.update_event(event_id, payload)
+    if new_capacity is not None:
+        event = event_service.update_capacity(event_id, int(new_capacity))
 
     log_action(
         actor_type="ORGANIZER",
@@ -99,8 +109,21 @@ def update_capacity(organizer_id, event_id, new_capacity: int) -> Event:
 
 
 def publish_event(organizer_id, event_id) -> Event:
-    _owns_event(organizer_id, event_id)
+    before = _owns_event(organizer_id, event_id)
+    was_archived = before.status == "ARCHIVED" or before.archived_at is not None
+
     event = event_service.publish_event(event_id)
+
+    if was_archived:
+        organizer = _organizer_repo.get_by_id(organizer_id)
+        organizer.active_events = (organizer.active_events or 0) + 1
+        _organizer_repo.update()
+
+        category = _category_repo.get_by_id(event.category_id)
+        if category is not None:
+            category.total_events = (category.total_events or 0) + 1
+            _category_repo.update()
+
     log_action(
         actor_type="ORGANIZER", actor_id=organizer_id, action="Event Published",
         entity_type="event", entity_id=event_id, entity_name=event.title,
@@ -119,13 +142,19 @@ def close_registrations(organizer_id, event_id) -> Event:
 
 
 def archive_event(organizer_id, event_id) -> Event:
-    _owns_event(organizer_id, event_id)
+    before = _owns_event(organizer_id, event_id)
     event = event_service.archive_event(event_id)
 
     organizer = _organizer_repo.get_by_id(organizer_id)
     if organizer.active_events:
         organizer.active_events -= 1
         _organizer_repo.update()
+
+    if before.archived_at is None:
+        category = _category_repo.get_by_id(before.category_id)
+        if category is not None and (category.total_events or 0) > 0:
+            category.total_events -= 1
+            _category_repo.update()
 
     log_action(
         actor_type="ORGANIZER", actor_id=organizer_id, action="Event Archived",

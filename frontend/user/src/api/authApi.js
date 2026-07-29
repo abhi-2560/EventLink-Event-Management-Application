@@ -11,3 +11,6 @@ export const requestPasswordReset = (email) =>
 
 export const resetPassword = (token, newPassword) =>
   api.post('/auth/organizer/reset-password', { token, new_password: newPassword }).then((r) => r.data);
+
+export const registerOrganizer = (payload) =>
+  api.post('/organizers/register', payload).then((r) => r.data);

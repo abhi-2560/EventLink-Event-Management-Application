@@ -39,10 +39,16 @@ export const eventSchema = z.object({
   meeting_link: z.string().optional(),
   ticket_price: z.coerce.number().min(0),
   is_free: z.boolean(),
-  convenience_fee: z.coerce.number().min(0).optional(),
-  gateway_fee: z.coerce.number().min(0).optional(),
   capacity: z.coerce.number().int().min(1),
   registration_start: z.string().optional(),
   registration_end: z.string().optional(),
   start_datetime: z.string().min(1),
+});
+
+export const couponSchema = z.object({
+  code: z.string().min(2, 'Code is required').max(100),
+  description: z.string().optional(),
+  flat_discount: z.coerce.number().positive('Discount must be greater than 0'),
+  expiry_date: z.string().optional().or(z.literal('')),
+  is_active: z.boolean().optional(),
 });

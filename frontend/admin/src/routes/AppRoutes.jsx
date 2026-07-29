@@ -12,6 +12,8 @@ import Categories from '../pages/Categories';
 import Reports from '../pages/Reports';
 import AuditLogs from '../pages/AuditLogs';
 import AuditLogDetail from '../pages/AuditLogDetail';
+import Coupons from '../pages/Coupons';
+import PlatformFeeSettings from '../pages/PlatformFeeSettings';
 import Profile from '../pages/Profile';
 
 function Protected({ children }) {
@@ -39,7 +41,9 @@ export default function AppRoutes() {
         <Route path="/events/:eventId" element={<EventDetail />} />
         <Route path="/events/:eventId/edit" element={<EditEvent />} />
         <Route path="/categories" element={<Categories />} />
+        <Route path="/coupons" element={<Coupons />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/settings/platform-fees" element={<PlatformFeeSettings />} />
         <Route path="/audit-logs" element={<AuditLogs />} />
         <Route path="/audit-logs/:logId" element={<AuditLogDetail />} />
         <Route path="/profile" element={<Profile />} />

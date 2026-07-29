@@ -35,12 +35,12 @@ def test_register_organizer_creates_active_organizer(fake_repo):
             "contact_person": "Jane Doe",
             "email": "org@example.com",
             "phone": "1234567890",
-            "password": "secret123",
+            "password": "Secret123",
         }
     )
 
     assert organizer.status == "ACTIVE"
     assert organizer.organizer_name == "Example Org"
     assert organizer.email == "org@example.com"
-    assert organizer.password_hash != "secret123"
+    assert organizer.password_hash != "Secret123"
     assert fake_repo.created

@@ -417,6 +417,7 @@ Admin only views.
 | ------ | ------------------------------- | ------------- |
 | POST   | `/admin/coupons`            | Create coupon |
 | GET    | `/admin/coupons`            | View coupons  |
+| GET    | `/admin/coupons/{couponId}` | Coupon details |
 | PUT    | `/admin/coupons/{couponId}` | Update coupon |
 | DELETE | `/admin/coupons/{couponId}` | Delete coupon |
 
@@ -426,9 +427,19 @@ Admin only views.
 
 | Method | Endpoint                       | Description          |
 | ------ | ------------------------------ | -------------------- |
-| GET    | `/admin/reports/dashboard` | Platform statistics  |
+| GET    | `/admin/reports/dashboard` | Platform statistics (all-time) |
+| GET    | `/admin/reports/period`    | Period summary (`start_date`, `end_date`) |
 | GET    | `/admin/reports/monthly`   | Monthly report       |
 | GET    | `/admin/reports/category`  | Category-wise report |
+
+---
+
+## Platform Fee Settings
+
+| Method | Endpoint                            | Description                    |
+| ------ | ----------------------------------- | ------------------------------ |
+| GET    | `/admin/settings/platform-fees` | View convenience & gateway fees |
+| PUT    | `/admin/settings/platform-fees` | Update convenience & gateway fees |
 
 ---
 
@@ -481,6 +492,16 @@ Admin only views.
 
 ---
 
+## Organizer Reports
+
+| Method | Endpoint                         | Description                              |
+| ------ | -------------------------------- | ---------------------------------------- |
+| GET    | `/organizer/reports/period`  | Period summary (`start_date`, `end_date`) |
+| GET    | `/organizer/reports/monthly` | Monthly report                           |
+| GET    | `/organizer/reports/category`| Category-wise report                     |
+
+---
+
 # 5. Public Event APIs
 
 Accessible without login.
@@ -526,6 +547,19 @@ No login required.
 | Method | Endpoint             | Description           |
 | ------ | -------------------- | --------------------- |
 | POST   | `/registrations` | Register for an event |
+
+Request body:
+
+```json
+{
+  "event_id": "uuid",
+  "registrant_name": "string",
+  "registrant_phone": "string",
+  "registrant_email": "string (optional)",
+  "seats_booked": 1,
+  "coupon_code": "string (optional)"
+}
+```
 
 This API:
 

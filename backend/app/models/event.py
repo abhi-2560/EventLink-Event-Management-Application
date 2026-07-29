@@ -34,8 +34,6 @@ class Event(db.Model):
     keywords = db.Column(ARRAY(String), nullable=True)
     ticket_price = db.Column(db.Numeric(10, 2), nullable=True, server_default=text("0"))
     is_free = db.Column(db.Boolean, nullable=True, server_default=text("false"))
-    convenience_fee = db.Column(db.Numeric(10, 2), nullable=True, server_default=text("0"))
-    gateway_fee = db.Column(db.Numeric(10, 2), nullable=True, server_default=text("0"))
     capacity = db.Column(Integer, nullable=False)
     available_seats = db.Column(Integer, nullable=False)
     total_registrations = db.Column(Integer, nullable=True, server_default=text("0"))
@@ -62,8 +60,6 @@ class Event(db.Model):
         CheckConstraint("event_type IN ('ONLINE','OFFLINE','HYBRID')", name="ck_event_type"),
         CheckConstraint("ticket_price >= 0", name="ck_event_ticket_price_nonnegative"),
         CheckConstraint("(NOT is_free) OR ticket_price = 0", name="ck_event_is_free_ticket_price"),
-        CheckConstraint("convenience_fee >= 0", name="ck_event_convenience_fee_nonnegative"),
-        CheckConstraint("gateway_fee >= 0", name="ck_event_gateway_fee_nonnegative"),
         CheckConstraint("capacity > 0", name="ck_event_capacity_positive"),
         CheckConstraint("available_seats >= 0 AND available_seats <= capacity", name="ck_event_available_seats_range"),
         CheckConstraint("total_registrations >= 0", name="ck_event_total_registrations_nonnegative"),

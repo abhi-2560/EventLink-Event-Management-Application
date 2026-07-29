@@ -15,8 +15,7 @@ function toForm(e) {
     title: e.title, description: e.description || '', event_type: e.event_type,
     venue: e.venue || '', city: e.city || '', state: e.state || '', country: e.country || '',
     meeting_link: e.meeting_link || '', ticket_price: Number(e.ticket_price || 0),
-    is_free: e.is_free || false, convenience_fee: Number(e.convenience_fee || 0),
-    gateway_fee: Number(e.gateway_fee || 0), capacity: e.capacity,
+    is_free: e.is_free || false, capacity: e.capacity,
     registration_start: e.registration_start?.slice(0, 16) || '',
     registration_end: e.registration_end?.slice(0, 16) || '',
     start_datetime: e.start_datetime?.slice(0, 16) || '',
@@ -64,7 +63,7 @@ export default function EditEvent() {
       <h1 className="text-2xl font-bold">Edit Event</h1>
 
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4 rounded-xl border border-border bg-white p-6 shadow-sm">
-        <Input label="Title" {...register('title')} error={errors.title?.message} />
+        <Input label="Title" required {...register('title')} error={errors.title?.message} />
         <Textarea label="Description" {...register('description')} />
         <Select label="Event Type" {...register('event_type')}>
           <option value="OFFLINE">Offline</option><option value="ONLINE">Online</option><option value="HYBRID">Hybrid</option>
@@ -73,12 +72,10 @@ export default function EditEvent() {
           <><Input label="Venue" {...register('venue')} /><Input label="City" {...register('city')} /><Input label="State" {...register('state')} /></>
         )}
         {(eventType === 'ONLINE' || eventType === 'HYBRID') && <Input label="Meeting Link" {...register('meeting_link')} />}
-        <Input label="Start Date & Time" type="datetime-local" {...register('start_datetime')} error={errors.start_datetime?.message} />
-        <Input label="Capacity" type="number" {...register('capacity', { valueAsNumber: true })} error={errors.capacity?.message} />
+        <Input label="Start Date & Time" type="datetime-local" required {...register('start_datetime')} error={errors.start_datetime?.message} />
+        <Input label="Capacity" type="number" required {...register('capacity', { valueAsNumber: true })} error={errors.capacity?.message} />
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" {...register('is_free')} />Free event</label>
         {!isFree && <Input label="Ticket Price" type="number" step="0.01" {...register('ticket_price', { valueAsNumber: true })} />}
-        <Input label="Convenience Fee" type="number" step="0.01" {...register('convenience_fee', { valueAsNumber: true })} />
-        <Input label="Gateway Fee" type="number" step="0.01" {...register('gateway_fee', { valueAsNumber: true })} />
         <Input label="Registration Opens" type="datetime-local" {...register('registration_start')} />
         <Input label="Registration Closes" type="datetime-local" {...register('registration_end')} />
         {mutation.isError && <p className="text-sm text-danger">{mutation.error.message}</p>}

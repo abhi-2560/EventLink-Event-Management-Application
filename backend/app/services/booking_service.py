@@ -13,7 +13,7 @@ from decimal import Decimal
 
 from app.extensions import db
 from app.repositories.registration_repository import RegistrationRepository
-from . import coupon_service, event_service
+from . import coupon_service, event_service, platform_settings_service
 from .audit_service import log_action
 from .exceptions import ConflictError, ForbiddenError, NotFoundError, ValidationError
 
@@ -80,8 +80,9 @@ def create_registration(
         raise
 
     ticket_price = Decimal(0) if event.is_free else event.ticket_price
-    convenience_fee = event.convenience_fee or Decimal(0)
-    gateway_fee = event.gateway_fee or Decimal(0)
+    fees = platform_settings_service.get_fees()
+    convenience_fee = fees["convenience_fee"]
+    gateway_fee = fees["gateway_fee"]
     discount = Decimal(0)
     coupon_id = None
     applied_code = None

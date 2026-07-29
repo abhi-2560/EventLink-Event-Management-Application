@@ -7,6 +7,7 @@ import StatusBadge from '../../components/organizer/StatusBadge';
 import ConfirmDialog from '../../components/organizer/ConfirmDialog';
 import { formatCurrency, formatDate } from '../../utils/constants';
 import { getEvent, publishEvent, closeRegistration, archiveEvent } from '../../api/organizerApi';
+import { showError, showSuccess } from '../../utils/toast';
 import { useState } from 'react';
 
 export default function OrganizerEventDetail() {
@@ -26,11 +27,15 @@ export default function OrganizerEventDetail() {
       if (action === 'archive') return archiveEvent(eventId);
       return Promise.reject(new Error('Unknown action'));
     },
-    onSuccess: () => {
+    onSuccess: (_, action) => {
       queryClient.invalidateQueries({ queryKey: ['organizer-event', eventId] });
       queryClient.invalidateQueries({ queryKey: ['organizer-events'] });
       setConfirm(null);
+      if (action === 'publish') showSuccess('Event published');
+      if (action === 'close') showSuccess('Registration closed');
+      if (action === 'archive') showSuccess('Event archived');
     },
+    onError: showError,
   });
 
   if (isLoading) return <Loader message="Loading event..." />;
@@ -50,7 +55,7 @@ export default function OrganizerEventDetail() {
         <div className="flex flex-wrap gap-2">
           <Link to={`/organizer/events/${eventId}/edit`}><Button variant="secondary"><Edit className="h-4 w-4" /> Edit</Button></Link>
           <Link to={`/organizer/events/${eventId}/registrations`}><Button variant="secondary"><Users className="h-4 w-4" /> Registrations</Button></Link>
-          {event.status === 'DRAFT' && (
+          {(event.status === 'DRAFT' || event.status === 'ARCHIVED') && (
             <Button variant="success" onClick={() => setConfirm({ action: 'publish' })}>Publish</Button>
           )}
           {event.registration_status === 'OPEN' && event.status === 'PUBLISHED' && (
@@ -83,6 +88,7 @@ export default function OrganizerEventDetail() {
         title={confirm?.action === 'publish' ? 'Publish event?' : confirm?.action === 'close' ? 'Close registration?' : 'Archive event?'}
         message="This action will update the event status."
         confirmLabel={confirm?.action === 'publish' ? 'Publish' : confirm?.action === 'close' ? 'Close Registration' : 'Archive'}
+        variant={confirm?.action === 'publish' ? 'success' : 'danger'}
         loading={mutation.isPending}
         onConfirm={() => mutation.mutate(confirm.action)}
         onCancel={() => setConfirm(null)}

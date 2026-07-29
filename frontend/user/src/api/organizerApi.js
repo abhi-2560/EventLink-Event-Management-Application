@@ -2,6 +2,9 @@ import api from './organizerAxios';
 
 export const getDashboard = () => api.get('/organizer/dashboard').then((r) => r.data);
 
+export const getPeriodReport = (params) =>
+  api.get('/organizer/reports/period', { params }).then((r) => r.data);
+
 export const getMonthlyReport = (params) =>
   api.get('/organizer/reports/monthly', { params }).then((r) => r.data);
 

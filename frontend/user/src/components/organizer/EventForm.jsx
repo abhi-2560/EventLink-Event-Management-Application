@@ -1,13 +1,22 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
-import Input from '../common/Input';
+import Input, { Select, Textarea } from '../common/Input';
 import Button from '../common/Button';
 import { getCategories } from '../../api/organizerApi';
 import { eventSchema, formToEventPayload } from '../../schemas/organizerSchemas';
 import Loader from '../common/Loader';
 
-export default function EventForm({ defaultValues, onSubmit, loading, submitLabel = 'Save Event', showPublish = false, onPublish }) {
+export default function EventForm({
+  defaultValues,
+  onSubmit,
+  loading,
+  submitLabel = 'Save Event',
+  showPublish = false,
+  onPublish,
+  isEdit = false,
+  minCapacity = 1,
+}) {
   const { data: categories, isLoading } = useQuery({
     queryKey: ['organizer-categories'],
     queryFn: getCategories,
@@ -29,36 +38,24 @@ export default function EventForm({ defaultValues, onSubmit, loading, submitLabe
         <h3 className="text-lg font-semibold text-gray-900">Basic details</h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <Input label="Title *" {...register('title')} error={errors.title?.message} />
+            <Input label="Title" required {...register('title')} error={errors.title?.message} />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-gray-700">Description</label>
-            <textarea
-              {...register('description')}
-              rows={4}
-              className="mt-1.5 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            />
+            <Textarea label="Description" {...register('description')} />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Category *</label>
-            <select {...register('category_id')} className="mt-1.5 w-full rounded-lg border border-border px-3 py-2 text-sm">
-              <option value="">Select category</option>
-              {categories?.map((c) => (
-                <option key={c.category_id} value={c.category_id}>{c.name}</option>
-              ))}
-            </select>
-            {errors.category_id && <p className="mt-1 text-xs text-danger">{errors.category_id.message}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Event type *</label>
-            <select {...register('event_type')} className="mt-1.5 w-full rounded-lg border border-border px-3 py-2 text-sm">
-              <option value="OFFLINE">Offline</option>
-              <option value="ONLINE">Online</option>
-              <option value="HYBRID">Hybrid</option>
-            </select>
-          </div>
+          <Select label="Category" required {...register('category_id')} error={errors.category_id?.message}>
+            <option value="">Select category</option>
+            {categories?.map((c) => (
+              <option key={c.category_id} value={c.category_id}>{c.name}</option>
+            ))}
+          </Select>
+          <Select label="Event type" required {...register('event_type')}>
+            <option value="OFFLINE">Offline</option>
+            <option value="ONLINE">Online</option>
+            <option value="HYBRID">Hybrid</option>
+          </Select>
           <Input label="Keywords (comma-separated)" {...register('keywords')} placeholder="conference, ai, workshop" />
-          <Input label="Start date & time *" type="datetime-local" {...register('start_datetime')} error={errors.start_datetime?.message} />
+          <Input label="Start date & time" type="datetime-local" required {...register('start_datetime')} error={errors.start_datetime?.message} />
         </div>
       </section>
 
@@ -68,14 +65,14 @@ export default function EventForm({ defaultValues, onSubmit, loading, submitLabe
           {(eventType === 'OFFLINE' || eventType === 'HYBRID') && (
             <>
               <Input label="Venue" {...register('venue')} />
-              <Input label="City *" {...register('city')} error={errors.city?.message} />
+              <Input label="City" required {...register('city')} error={errors.city?.message} />
               <Input label="State" {...register('state')} />
               <Input label="Country" {...register('country')} />
             </>
           )}
           {(eventType === 'ONLINE' || eventType === 'HYBRID') && (
             <div className="sm:col-span-2">
-              <Input label="Meeting link *" {...register('meeting_link')} error={errors.meeting_link?.message} />
+              <Input label="Meeting link" required {...register('meeting_link')} error={errors.meeting_link?.message} />
             </div>
           )}
         </div>
@@ -84,7 +81,14 @@ export default function EventForm({ defaultValues, onSubmit, loading, submitLabe
       <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
         <h3 className="text-lg font-semibold text-gray-900">Tickets & capacity</h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Input label="Capacity *" type="number" min={1} {...register('capacity', { valueAsNumber: true })} error={errors.capacity?.message} />
+          <Input
+            label="Capacity"
+            type="number"
+            min={minCapacity}
+            required
+            {...register('capacity', { valueAsNumber: true })}
+            error={errors.capacity?.message}
+          />
           <div className="flex items-end gap-3 pb-2">
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" {...register('is_free')} className="rounded border-border" />
@@ -92,11 +96,13 @@ export default function EventForm({ defaultValues, onSubmit, loading, submitLabe
             </label>
           </div>
           {!isFree && (
-            <>
-              <Input label="Ticket price (INR)" type="number" min={0} step="0.01" {...register('ticket_price', { valueAsNumber: true })} error={errors.ticket_price?.message} />
-              <Input label="Convenience fee" type="number" min={0} step="0.01" {...register('convenience_fee', { valueAsNumber: true })} />
-              <Input label="Gateway fee" type="number" min={0} step="0.01" {...register('gateway_fee', { valueAsNumber: true })} />
-            </>
+            <Input label="Ticket price (INR)" type="number" min={0} step="0.01" required {...register('ticket_price', { valueAsNumber: true })} error={errors.ticket_price?.message} />
+          )}
+          {isEdit && (
+            <Select label="Registration status" required {...register('registration_status')}>
+              <option value="OPEN">Open</option>
+              <option value="CLOSED">Closed</option>
+            </Select>
           )}
         </div>
       </section>

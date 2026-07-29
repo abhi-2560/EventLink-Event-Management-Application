@@ -23,8 +23,16 @@ def create_coupon():
         flat_discount=data.get("flat_discount"),
         description=data.get("description"),
         expiry_date=data.get("expiry_date"),
+        is_active=data.get("is_active", True),
     )
     return jsonify(serialize_coupon(coupon)), 201
+
+
+@admin_bp.route("/coupons/<coupon_id>", methods=["GET"])
+@admin_required
+def get_coupon(coupon_id):
+    coupon = coupon_service.get_coupon(coupon_id)
+    return jsonify(serialize_coupon(coupon)), 200
 
 
 @admin_bp.route("/coupons/<coupon_id>", methods=["PUT"])

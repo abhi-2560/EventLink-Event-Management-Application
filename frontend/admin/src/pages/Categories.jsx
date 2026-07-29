@@ -11,6 +11,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { getCategories, createCategory, updateCategory, archiveCategory } from '../api/adminApi';
 import { categorySchema } from '../schemas/adminSchemas';
 import { DEFAULT_CATEGORIES } from '../utils/helpers';
+import { showError, showSuccess } from '../utils/toast';
 
 export default function Categories() {
   const queryClient = useQueryClient();
@@ -25,17 +26,33 @@ export default function Categories() {
 
   const createMut = useMutation({
     mutationFn: createCategory,
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-categories'] }); setCreating(false); createForm.reset(); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+      setCreating(false);
+      createForm.reset();
+      showSuccess('Category created');
+    },
+    onError: showError,
   });
 
   const updateMut = useMutation({
     mutationFn: ({ id, payload }) => updateCategory(id, payload),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-categories'] }); setEditing(null); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+      setEditing(null);
+      showSuccess('Category updated');
+    },
+    onError: showError,
   });
 
   const archiveMut = useMutation({
     mutationFn: (id) => archiveCategory(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-categories'] }); setArchiveTarget(null); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+      setArchiveTarget(null);
+      showSuccess('Category archived');
+    },
+    onError: showError,
   });
 
   const startEdit = (cat) => {
@@ -60,7 +77,7 @@ export default function Categories() {
       {creating && (
         <form onSubmit={createForm.handleSubmit((d) => createMut.mutate(d))} className="space-y-3 rounded-xl border border-border bg-white p-5 shadow-sm">
           <h3 className="font-semibold">New Category</h3>
-          <Input label="Name" {...createForm.register('name')} error={createForm.formState.errors.name?.message} />
+          <Input label="Name" required {...createForm.register('name')} error={createForm.formState.errors.name?.message} />
           <Textarea label="Description" {...createForm.register('description')} />
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" {...createForm.register('is_default')} />Default category</label>
           <div className="flex gap-2">

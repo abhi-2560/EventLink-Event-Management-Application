@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import OrganizerLayout from '../layouts/OrganizerLayout';
 import OrganizerLogin from '../pages/organizer/Login';
+import OrganizerSignup from '../pages/organizer/Signup';
 import OrganizerDashboard from '../pages/organizer/Dashboard';
 import OrganizerEvents from '../pages/organizer/Events';
 import CreateEvent from '../pages/organizer/CreateEvent';
@@ -22,6 +23,7 @@ export default function OrganizerRoutes() {
   return (
     <Routes>
       <Route path="login" element={<LoginRedirect><OrganizerLogin /></LoginRedirect>} />
+      <Route path="signup" element={<LoginRedirect><OrganizerSignup /></LoginRedirect>} />
       <Route element={<ProtectedRoute><OrganizerLayout /></ProtectedRoute>}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<OrganizerDashboard />} />

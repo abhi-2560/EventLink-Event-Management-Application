@@ -8,6 +8,7 @@ import Pagination, { paginate } from './Pagination';
 import ConfirmDialog from './ConfirmDialog';
 import { formatCurrency, formatDateShort } from '../../utils/constants';
 import { closeRegistration, archiveEvent } from '../../api/organizerApi';
+import { showError, showSuccess } from '../../utils/toast';
 
 export default function EventTable({ events, loading }) {
   const [search, setSearch] = useState('');
@@ -23,10 +24,12 @@ export default function EventTable({ events, loading }) {
       if (action === 'archive') return archiveEvent(eventId);
       return Promise.reject(new Error('Unknown action'));
     },
-    onSuccess: () => {
+    onSuccess: (_, { action }) => {
       queryClient.invalidateQueries({ queryKey: ['organizer-events'] });
       setConfirm(null);
+      showSuccess(action === 'close' ? 'Registration closed' : 'Event archived');
     },
+    onError: showError,
   });
 
   const filtered = events.filter((e) => {

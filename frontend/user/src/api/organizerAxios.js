@@ -20,7 +20,9 @@ api.interceptors.response.use(
     const message = error.response?.data?.error || error.message || 'Something went wrong';
     if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.removeItem('organizer_token');
-      if (window.location.pathname.startsWith('/organizer') && !window.location.pathname.includes('/login')) {
+      if (window.location.pathname.startsWith('/organizer')
+        && !window.location.pathname.includes('/login')
+        && !window.location.pathname.includes('/signup')) {
         window.location.href = '/organizer/login';
       }
     }

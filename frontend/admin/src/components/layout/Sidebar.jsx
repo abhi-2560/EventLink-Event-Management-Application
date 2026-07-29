@@ -1,18 +1,21 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, CalendarDays, Tags, BarChart3, ScrollText, User, LogOut, Menu, X, Shield,
+  LayoutDashboard, Users, CalendarDays, Tags, Ticket, BarChart3, ScrollText, User, LogOut, Menu, X, Shield, IndianRupee,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../../utils/helpers';
 import { useAuth } from '../../context/AuthContext';
 import { logoutAdmin } from '../../api/adminApi';
+import { showSuccess } from '../../utils/toast';
 
 const links = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/organizers', label: 'Organizers', icon: Users },
   { to: '/events', label: 'Events', icon: CalendarDays },
   { to: '/categories', label: 'Categories', icon: Tags },
+  { to: '/coupons', label: 'Coupons', icon: Ticket },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
+  { to: '/settings/platform-fees', label: 'Platform Fees', icon: IndianRupee },
   { to: '/audit-logs', label: 'Audit Logs', icon: ScrollText },
   { to: '/profile', label: 'Profile', icon: User },
 ];
@@ -25,6 +28,7 @@ export default function Sidebar() {
   const handleLogout = async () => {
     try { await logoutAdmin(); } catch { /* ignore */ }
     logout();
+    showSuccess('Signed out successfully');
     navigate('/login');
   };
 
@@ -52,7 +56,7 @@ export default function Sidebar() {
       <aside className={cn('fixed inset-y-0 left-0 z-30 w-60 bg-sidebar text-white transition-transform lg:translate-x-0', open ? 'translate-x-0' : '-translate-x-full')}>
         <div className="flex h-16 items-center gap-2 border-b border-slate-700 px-5">
           <Shield className="h-6 w-6 text-accent" />
-          <span className="font-semibold">EventHub Admin</span>
+          <span onClick={()=>navigate('/')} className="font-semibold">EventHub Admin</span>
         </div>
         {nav}
       </aside>

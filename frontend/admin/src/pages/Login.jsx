@@ -8,6 +8,7 @@ import Button from '../components/ui/Button';
 import { loginAdmin } from '../api/adminApi';
 import { useAuth } from '../context/AuthContext';
 import { loginSchema } from '../schemas/adminSchemas';
+import { showError, showSuccess } from '../utils/toast';
 
 export default function Login() {
   const { login } = useAuth();
@@ -16,7 +17,12 @@ export default function Login() {
 
   const mutation = useMutation({
     mutationFn: ({ email, password }) => loginAdmin(email, password),
-    onSuccess: (data) => { login(data.access_token); navigate('/dashboard'); },
+    onSuccess: (data) => {
+      login(data.access_token);
+      showSuccess('Signed in successfully');
+      navigate('/dashboard');
+    },
+    onError: showError,
   });
 
   return (
@@ -30,9 +36,8 @@ export default function Login() {
           </div>
         </div>
         <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
-          <Input label="Email" type="email" {...register('email')} error={errors.email?.message} />
-          <Input label="Password" type="password" {...register('password')} error={errors.password?.message} />
-          {mutation.isError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-danger">{mutation.error.message}</p>}
+          <Input label="Email" type="email" required {...register('email')} error={errors.email?.message} />
+          <Input label="Password" type="password" required {...register('password')} error={errors.password?.message} />
           <Button type="submit" className="w-full" size="lg" loading={mutation.isPending}>Sign In</Button>
         </form>
       </div>

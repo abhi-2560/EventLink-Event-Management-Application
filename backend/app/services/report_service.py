@@ -37,6 +37,51 @@ def get_admin_dashboard_summary():
     }
 
 
+def get_period_summary(start_date=None, end_date=None):
+    if end_date is None:
+        end_date = datetime.now(timezone.utc)
+    if start_date is None:
+        start_date = end_date - timedelta(days=30 * DEFAULT_WINDOW_MONTHS)
+
+    total_events = (
+        db.session.query(func.count(Event.event_id))
+        .filter(
+            Event.created_at >= start_date,
+            Event.created_at <= end_date,
+            Event.archived_at.is_(None),
+        )
+        .scalar()
+        or 0
+    )
+
+    payment_stats = (
+        db.session.query(
+            func.count(Payment.payment_id),
+            func.coalesce(func.sum(Payment.amount), 0),
+        )
+        .filter(
+            Payment.payment_status == "SUCCESS",
+            Payment.completed_at >= start_date,
+            Payment.completed_at <= end_date,
+        )
+        .first()
+    )
+
+    total_organizers = (
+        db.session.query(func.count(Organizer.organizer_id))
+        .filter(Organizer.created_at >= start_date, Organizer.created_at <= end_date)
+        .scalar()
+        or 0
+    )
+
+    return {
+        "total_events": total_events,
+        "total_registrations": int(payment_stats[0] or 0),
+        "total_revenue": str(payment_stats[1] or Decimal(0)),
+        "total_organizers": total_organizers,
+    }
+
+
 def get_monthly_bar_chart(months: int = DEFAULT_WINDOW_MONTHS, start_date=None, end_date=None):
     if end_date is None:
         end_date = datetime.now(timezone.utc)
@@ -105,7 +150,7 @@ def get_monthly_bar_chart(months: int = DEFAULT_WINDOW_MONTHS, start_date=None, 
         bucket(row.month)["organizers"] = row.organizers
 
     return [
-        {**v, "revenue": str(v["revenue"])}
+        {**v, "revenue": str(v["revenue"]), "events": int(v["events"]), "registrations": int(v["registrations"]), "organizers": int(v["organizers"])}
         for v in sorted(by_month.values(), key=lambda x: x["month"])
     ]
 
@@ -118,16 +163,17 @@ def get_category_pie_chart(start_date=None, end_date=None):
 
     rows = (
         db.session.query(
-            Event.category_name,
+            func.coalesce(Event.category_name, "Uncategorized").label("category_name"),
             func.count(Event.event_id).label("event_count"),
         )
         .filter(
-            Event.start_datetime >= start_date,
-            Event.start_datetime <= end_date,
+            Event.created_at >= start_date,
+            Event.created_at <= end_date,
             Event.archived_at.is_(None),
         )
-        .group_by(Event.category_name)
+        .group_by("category_name")
+        .order_by(func.count(Event.event_id).desc())
         .all()
     )
 
-    return [{"category_name": row.category_name, "event_count": row.event_count} for row in rows]
+    return [{"category_name": row.category_name, "event_count": int(row.event_count)} for row in rows]

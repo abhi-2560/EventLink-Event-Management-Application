@@ -13,6 +13,15 @@ export const getMonthlyReport = (params) =>
 export const getCategoryReport = (params) =>
   api.get('/admin/reports/category', { params }).then((r) => r.data);
 
+export const getPeriodReport = (params) =>
+  api.get('/admin/reports/period', { params }).then((r) => r.data);
+
+export const getPlatformFees = () =>
+  api.get('/admin/settings/platform-fees').then((r) => r.data);
+
+export const updatePlatformFees = (payload) =>
+  api.put('/admin/settings/platform-fees', payload).then((r) => r.data);
+
 export const getOrganizers = () => api.get('/admin/organizers').then((r) => r.data);
 
 export const getOrganizer = (id) => api.get(`/admin/organizers/${id}`).then((r) => r.data);
@@ -66,3 +75,13 @@ export const updateProfile = (payload) =>
 
 export const changePassword = (current_password, new_password) =>
   api.post('/admin/profile/change-password', { current_password, new_password }).then((r) => r.data);
+
+export const getCoupons = () => api.get('/admin/coupons').then((r) => r.data);
+
+export const getCoupon = (id) => api.get(`/admin/coupons/${id}`).then((r) => r.data);
+
+export const createCoupon = (payload) => api.post('/admin/coupons', payload).then((r) => r.data);
+
+export const updateCoupon = (id, payload) => api.put(`/admin/coupons/${id}`, payload).then((r) => r.data);
+
+export const deleteCoupon = (id) => api.delete(`/admin/coupons/${id}`).then((r) => r.data);

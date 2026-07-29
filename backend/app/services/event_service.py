@@ -19,7 +19,7 @@ from app.models import Category, Event, Organizer
 from app.repositories.category_repository import CategoryRepository
 from app.repositories.event_repository import EventRepository
 from app.repositories.organizer_repository import OrganizerRepository
-from .exceptions import NotFoundError, SeatsUnavailableError, ValidationError
+from .exceptions import ConflictError, NotFoundError, SeatsUnavailableError, ValidationError
 
 _event_repo = EventRepository()
 _organizer_repo = OrganizerRepository()
@@ -27,19 +27,46 @@ _category_repo = CategoryRepository()
 
 CREATABLE_FIELDS = {
     "title", "description", "event_type", "venue", "city", "state", "country",
-    "meeting_link", "keywords", "ticket_price", "is_free", "convenience_fee",
-    "gateway_fee", "capacity", "registration_start", "registration_end",
+    "meeting_link", "keywords", "ticket_price", "is_free",
+    "capacity", "registration_start", "registration_end",
     "start_datetime",
 }
 
-# capacity is excluded here on purpose - it has its own guarded path (update_capacity)
-UPDATABLE_FIELDS = CREATABLE_FIELDS - {"capacity"}
+# capacity updates use update_capacity(); category_id handled in update_event()
+UPDATABLE_FIELDS = (CREATABLE_FIELDS - {"capacity"}) | {"category_id", "registration_status"}
 
 
 def get_event(event_id) -> Event:
     event = _event_repo.get_by_id(event_id)
     if event is None:
         raise NotFoundError("Event not found")
+    return event
+
+
+def update_event(event_id, payload: dict) -> Event:
+    event = get_event(event_id)
+
+    if "category_id" in payload:
+        new_category_id = payload["category_id"]
+        if str(new_category_id) != str(event.category_id):
+            new_category = _category_repo.get_by_id(new_category_id)
+            if new_category is None:
+                raise ValidationError("category_id must reference an existing category")
+            old_category_id = event.category_id
+            event.category_id = new_category.category_id
+            event.category_name = new_category.name
+            if event.archived_at is None:
+                old_category = _category_repo.get_by_id(old_category_id)
+                if old_category is not None and (old_category.total_events or 0) > 0:
+                    old_category.total_events -= 1
+                new_category.total_events = (new_category.total_events or 0) + 1
+                _category_repo.update()
+
+    for key, value in payload.items():
+        if key in UPDATABLE_FIELDS and key != "category_id":
+            setattr(event, key, value)
+
+    _event_repo.update()
     return event
 
 
@@ -78,15 +105,6 @@ def create_event(organizer_id, payload: dict) -> Event:
     )
 
 
-def update_event(event_id, payload: dict) -> Event:
-    event = get_event(event_id)
-    for key, value in payload.items():
-        if key in UPDATABLE_FIELDS:
-            setattr(event, key, value)
-    _event_repo.update()
-    return event
-
-
 def update_capacity(event_id, new_capacity: int) -> Event:
     """
     Enforces: can't downsize below what's already booked.
@@ -110,9 +128,56 @@ def update_capacity(event_id, new_capacity: int) -> Event:
     return event
 
 
+def _validate_event_for_publish(event: Event) -> None:
+    """Enforce the same business rules applied on the organizer event form."""
+    title = (event.title or "").strip()
+    if len(title) < 3:
+        raise ValidationError("Title must be at least 3 characters")
+
+    if not event.category_id:
+        raise ValidationError("category_id is required")
+
+    if not event.event_type:
+        raise ValidationError("event_type is required")
+
+    if not event.start_datetime:
+        raise ValidationError("start_datetime is required")
+
+    if not event.capacity or event.capacity <= 0:
+        raise ValidationError("capacity must be a positive integer")
+
+    if event.event_type == "OFFLINE" and not (event.city or "").strip():
+        raise ValidationError("City is required for offline events")
+
+    if event.event_type in ("ONLINE", "HYBRID") and not (event.meeting_link or "").strip():
+        raise ValidationError("Meeting link is required for online and hybrid events")
+
+    if event.is_free and event.ticket_price not in (None, 0):
+        raise ValidationError("Free events must have ticket price 0")
+
+    if not event.is_free and (event.ticket_price is None or event.ticket_price < 0):
+        raise ValidationError("Ticket price must be 0 or more")
+
+    if (
+        event.registration_start
+        and event.registration_end
+        and event.registration_end <= event.registration_start
+    ):
+        raise ValidationError("Registration end must be after registration start")
+
+
 def publish_event(event_id) -> Event:
     event = get_event(event_id)
+
+    if event.status not in ("DRAFT", "ARCHIVED"):
+        raise ConflictError(f"Cannot publish event with status {event.status}")
+
+    _validate_event_for_publish(event)
+
     event.status = "PUBLISHED"
+    if event.archived_at is not None:
+        event.archived_at = None
+
     _event_repo.update()
     return event
 

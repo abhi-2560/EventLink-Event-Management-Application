@@ -13,6 +13,8 @@ Flask-free and independently testable.
 
 from __future__ import annotations
 
+import re
+
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -28,6 +30,20 @@ _RESET_SALT = "password-reset"
 _RESET_MAX_AGE_SECONDS = 30 * 60  # 30 minutes
 
 _REPOS = {"admin": _admin_repo, "organizer": _organizer_repo}
+
+_EMAIL_RE = re.compile(r"^[^@]+@[^@]+\.[^@]+$")
+_PHONE_RE = re.compile(r"^[0-9+\-\s()]{10,15}$")
+
+
+def _validate_password(password: str) -> None:
+    if len(password) < 8:
+        raise ValidationError("password must be at least 8 characters")
+    if not re.search(r"[a-z]", password):
+        raise ValidationError("password must include a lowercase letter")
+    if not re.search(r"[A-Z]", password):
+        raise ValidationError("password must include an uppercase letter")
+    if not re.search(r"[0-9]", password):
+        raise ValidationError("password must include a number")
 
 
 def _repo_for(actor_type: str):
@@ -54,6 +70,12 @@ def register_organizer(payload: dict):
         raise ValidationError("phone is required")
     if not password:
         raise ValidationError("password is required")
+
+    if not _EMAIL_RE.match(email):
+        raise ValidationError("email format is invalid")
+    if not _PHONE_RE.match(phone):
+        raise ValidationError("phone format is invalid")
+    _validate_password(password)
 
     if _organizer_repo.get_by_email(email) is not None:
         raise ConflictError("Organizer with this email already exists")

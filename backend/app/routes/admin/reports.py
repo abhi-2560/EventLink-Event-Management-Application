@@ -27,6 +27,13 @@ def dashboard():
     return jsonify(report_service.get_admin_dashboard_summary()), 200
 
 
+@admin_bp.route("/reports/period", methods=["GET"])
+@admin_required
+def period_summary():
+    start_date, end_date = _parse_dates()
+    return jsonify(report_service.get_period_summary(start_date, end_date)), 200
+
+
 @admin_bp.route("/reports/monthly", methods=["GET"])
 @admin_required
 def monthly_bar_chart():

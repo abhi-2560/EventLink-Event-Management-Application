@@ -1,16 +1,12 @@
 """
 Coupons are platform-wide in the finalized schema (no event_id column),
 so any registrant can apply any active, unexpired code.
-
-Note: the current Coupon model has no max_uses/redemption-limit column -
-times_used is tracked but nothing caps it. redeem() still does the
-increment atomically (guarding against a coupon going inactive/expired
-between the validity check and the redemption, which is a real race),
-but there's no "sold out" case the way there is for event seats. Add a
-max_uses column later if a redemption cap is needed.
 """
 
 from __future__ import annotations
+
+from datetime import datetime, timezone
+from decimal import Decimal
 
 from sqlalchemy import update
 
@@ -18,21 +14,62 @@ from app.extensions import db
 from app.models import Coupon
 from app.repositories.coupon_repository import CouponRepository
 from .audit_service import log_action
-from .exceptions import ConflictError, CouponInvalidError, NotFoundError
+from .exceptions import ConflictError, CouponInvalidError, NotFoundError, ValidationError
 
 _coupon_repo = CouponRepository()
+
+
+def _parse_expiry(expiry_date):
+    if expiry_date is None or expiry_date == "":
+        return None
+    if isinstance(expiry_date, str):
+        return datetime.fromisoformat(expiry_date.replace("Z", "+00:00"))
+    return expiry_date
+
+
+def _validate_coupon_input(code, flat_discount, expiry_date=None):
+    normalized_code = (code or "").strip().upper()
+    if not normalized_code:
+        raise ValidationError("code is required")
+    if len(normalized_code) > 100:
+        raise ValidationError("code must be at most 100 characters")
+
+    try:
+        discount = Decimal(str(flat_discount))
+    except Exception as exc:
+        raise ValidationError("flat_discount must be a valid number") from exc
+    if discount <= 0:
+        raise ValidationError("flat_discount must be greater than 0")
+
+    parsed_expiry = _parse_expiry(expiry_date)
+    if parsed_expiry is not None and parsed_expiry <= datetime.now(timezone.utc):
+        raise ValidationError("expiry_date must be in the future")
+
+    return normalized_code, discount, parsed_expiry
 
 
 def list_coupons():
     return _coupon_repo.get_all()
 
 
-def create_coupon(admin_id, code: str, flat_discount, description=None, expiry_date=None):
-    if _coupon_repo.code_exists(code):
-        raise ConflictError(f"Coupon code '{code}' already exists")
+def get_coupon(coupon_id):
+    coupon = _coupon_repo.get_by_id(coupon_id)
+    if coupon is None:
+        raise NotFoundError("Coupon not found")
+    return coupon
+
+
+def create_coupon(admin_id, code: str, flat_discount, description=None, expiry_date=None, is_active=True):
+    normalized_code, discount, parsed_expiry = _validate_coupon_input(code, flat_discount, expiry_date)
+    if _coupon_repo.code_exists(normalized_code):
+        raise ConflictError(f"Coupon code '{normalized_code}' already exists")
 
     coupon = _coupon_repo.create(
-        code=code, flat_discount=flat_discount, description=description, expiry_date=expiry_date,
+        code=normalized_code,
+        flat_discount=discount,
+        description=description,
+        expiry_date=parsed_expiry,
+        is_active=True if is_active is None else bool(is_active),
     )
     log_action(
         actor_type="ADMIN", actor_id=admin_id, action="Coupon Created",
@@ -42,13 +79,28 @@ def create_coupon(admin_id, code: str, flat_discount, description=None, expiry_d
 
 
 def update_coupon(admin_id, coupon_id, payload: dict):
-    coupon = _coupon_repo.get_by_id(coupon_id)
-    if coupon is None:
-        raise NotFoundError("Coupon not found")
+    coupon = get_coupon(coupon_id)
 
-    for field in ("description", "flat_discount", "is_active", "expiry_date"):
-        if field in payload:
-            setattr(coupon, field, payload[field])
+    if "code" in payload:
+        normalized_code, _, _ = _validate_coupon_input(payload["code"], payload.get("flat_discount", coupon.flat_discount), payload.get("expiry_date", coupon.expiry_date))
+        if normalized_code != coupon.code and _coupon_repo.code_exists(normalized_code, exclude_id=coupon_id):
+            raise ConflictError(f"Coupon code '{normalized_code}' already exists")
+        coupon.code = normalized_code
+
+    if "flat_discount" in payload:
+        _, discount, _ = _validate_coupon_input(coupon.code, payload["flat_discount"], payload.get("expiry_date", coupon.expiry_date))
+        coupon.flat_discount = discount
+
+    if "expiry_date" in payload:
+        _, _, parsed_expiry = _validate_coupon_input(coupon.code, coupon.flat_discount, payload["expiry_date"])
+        coupon.expiry_date = parsed_expiry
+
+    if "description" in payload:
+        coupon.description = payload["description"]
+
+    if "is_active" in payload:
+        coupon.is_active = bool(payload["is_active"])
+
     _coupon_repo.update()
 
     log_action(
@@ -60,10 +112,7 @@ def update_coupon(admin_id, coupon_id, payload: dict):
 
 def delete_coupon(admin_id, coupon_id):
     """Soft delete - flips is_active off rather than a real DELETE."""
-    coupon = _coupon_repo.get_by_id(coupon_id)
-    if coupon is None:
-        raise NotFoundError("Coupon not found")
-
+    coupon = get_coupon(coupon_id)
     coupon.is_active = False
     _coupon_repo.update()
 
@@ -75,19 +124,14 @@ def delete_coupon(admin_id, coupon_id):
 
 
 def validate(code: str) -> Coupon:
-    coupon = _coupon_repo.get_valid_coupon(code)
+    normalized = (code or "").strip().upper()
+    coupon = _coupon_repo.get_valid_coupon(normalized)
     if coupon is None:
         raise CouponInvalidError("Coupon is invalid, inactive, or expired")
     return coupon
 
 
 def redeem(coupon_id, discount_amount) -> Coupon:
-    """
-    Atomic increment of times_used/total_discount_given, re-checking
-    validity in the same statement. Does NOT commit - the caller
-    (booking_service.apply_coupon) folds this into its own transaction
-    alongside the registration update.
-    """
     result = db.session.execute(
         update(Coupon)
         .where(
@@ -103,3 +147,4 @@ def redeem(coupon_id, discount_amount) -> Coupon:
     )
     if result.first() is None:
         raise CouponInvalidError("Coupon became invalid before it could be applied")
+    return _coupon_repo.get_by_id(coupon_id)

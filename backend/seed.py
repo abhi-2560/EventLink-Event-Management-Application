@@ -2,6 +2,9 @@ from app import create_app
 from app.extensions import db
 from app.models.admin import Admin
 from app.models.category import Category
+from app.models.event import Event
+from app.models.platform_settings import PlatformSettings
+from sqlalchemy import func
 from werkzeug.security import generate_password_hash
 
 DEFAULT_CATEGORIES = [
@@ -36,5 +39,26 @@ with app.app_context():
             db.session.add(Category(name=name, description=description, is_default=True))
             print(f"Category created: {name}")
 
+    if db.session.get(PlatformSettings, 1) is None:
+        db.session.add(PlatformSettings(id=1, convenience_fee=0, gateway_fee=0))
+        print("Platform fee settings initialized.")
+
     db.session.commit()
+
+    counts = (
+        db.session.query(
+            Event.category_id,
+            func.count(Event.event_id),
+        )
+        .filter(Event.archived_at.is_(None))
+        .group_by(Event.category_id)
+        .all()
+    )
+    count_by_category = {category_id: count for category_id, count in counts}
+
+    for category in Category.query.all():
+        category.total_events = count_by_category.get(category.category_id, 0)
+
+    db.session.commit()
+    print("Category event counts backfilled.")
     print("Seed complete.")

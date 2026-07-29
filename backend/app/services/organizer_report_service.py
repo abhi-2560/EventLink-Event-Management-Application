@@ -8,8 +8,46 @@ from sqlalchemy import func
 from app.extensions import db
 from app.models import Event, Organizer, Payment
 
-
 DEFAULT_WINDOW_MONTHS = 6
+
+
+def get_organizer_period_summary(organizer_id, start_date=None, end_date=None):
+    if end_date is None:
+        end_date = datetime.now(timezone.utc)
+    if start_date is None:
+        start_date = end_date - timedelta(days=30 * DEFAULT_WINDOW_MONTHS)
+
+    total_events = (
+        db.session.query(func.count(Event.event_id))
+        .filter(
+            Event.organizer_id == organizer_id,
+            Event.created_at >= start_date,
+            Event.created_at <= end_date,
+            Event.archived_at.is_(None),
+        )
+        .scalar()
+        or 0
+    )
+
+    payment_stats = (
+        db.session.query(
+            func.count(Payment.payment_id),
+            func.coalesce(func.sum(Payment.amount), 0),
+        )
+        .filter(
+            Payment.organizer_id == organizer_id,
+            Payment.payment_status == "SUCCESS",
+            Payment.completed_at >= start_date,
+            Payment.completed_at <= end_date,
+        )
+        .first()
+    )
+
+    return {
+        "total_events": total_events,
+        "total_registrations": int(payment_stats[0] or 0),
+        "total_revenue": str(payment_stats[1] or Decimal(0)),
+    }
 
 
 def get_organizer_dashboard(organizer_id):
@@ -65,7 +103,7 @@ def get_organizer_monthly_report(organizer_id, start_date=None, end_date=None):
     if start_date is None:
         start_date = end_date - timedelta(days=30 * DEFAULT_WINDOW_MONTHS)
 
-    rows = (
+    payment_rows = (
         db.session.query(
             func.date_trunc("month", Payment.completed_at).label("month"),
             func.count(Payment.payment_id).label("registrations"),
@@ -96,16 +134,35 @@ def get_organizer_monthly_report(organizer_id, start_date=None, end_date=None):
         .all()
     )
 
-    events_by_month = {row.month.strftime("%Y-%m"): row.events for row in event_rows}
+    by_month: dict[str, dict] = {}
+
+    def bucket(month_dt):
+        key = month_dt.strftime("%Y-%m")
+        if key not in by_month:
+            by_month[key] = {
+                "month": key,
+                "events": 0,
+                "registrations": 0,
+                "revenue": Decimal(0),
+            }
+        return by_month[key]
+
+    for row in payment_rows:
+        b = bucket(row.month)
+        b["registrations"] = row.registrations
+        b["revenue"] = row.revenue
+
+    for row in event_rows:
+        bucket(row.month)["events"] = row.events
 
     return [
         {
-            "month": row.month.strftime("%Y-%m"),
-            "registrations": row.registrations,
-            "revenue": str(row.revenue),
-            "events": events_by_month.get(row.month.strftime("%Y-%m"), 0),
+            **v,
+            "revenue": str(v["revenue"]),
+            "events": int(v["events"]),
+            "registrations": int(v["registrations"]),
         }
-        for row in rows
+        for v in sorted(by_month.values(), key=lambda x: x["month"])
     ]
 
 
@@ -117,20 +174,21 @@ def get_organizer_category_report(organizer_id, start_date=None, end_date=None):
 
     rows = (
         db.session.query(
-            Event.category_name,
+            func.coalesce(Event.category_name, "Uncategorized").label("category_name"),
             func.count(Event.event_id).label("event_count"),
         )
         .filter(
             Event.organizer_id == organizer_id,
-            Event.start_datetime >= start_date,
-            Event.start_datetime <= end_date,
+            Event.created_at >= start_date,
+            Event.created_at <= end_date,
             Event.archived_at.is_(None),
         )
-        .group_by(Event.category_name)
+        .group_by("category_name")
+        .order_by(func.count(Event.event_id).desc())
         .all()
     )
 
-    return [{"category_name": row.category_name, "event_count": row.event_count} for row in rows]
+    return [{"category_name": row.category_name, "event_count": int(row.event_count)} for row in rows]
 
 
 def get_organizer_recent_transactions(organizer_id, limit: int = 10):
