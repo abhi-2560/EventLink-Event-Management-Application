@@ -33,7 +33,6 @@ def serialize_organizer(organizer):
         "total_registrations": organizer.total_registrations,
         "total_tickets_sold": organizer.total_tickets_sold,
         "total_sales": str(organizer.total_sales),
-        "platform_fee_generated": str(organizer.platform_fee_generated),
         "created_at": _iso(organizer.created_at),
         "archived_at": _iso(organizer.archived_at),
     }
@@ -148,7 +147,6 @@ def serialize_payment(payment):
         "discount": str(payment.discount),
         "convenience_fee": str(payment.convenience_fee),
         "gateway_fee": str(payment.gateway_fee),
-        "platform_fee": str(payment.platform_fee) if payment.platform_fee is not None else "0",
         "amount": str(payment.amount),
         "payment_status": payment.payment_status,
         "failure_reason": payment.failure_reason,

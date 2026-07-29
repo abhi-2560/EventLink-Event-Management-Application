@@ -1,38 +1,49 @@
 import { Search, SlidersHorizontal } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Button from '../common/Button';
 import Input from '../common/Input';
 import { CATEGORIES, EVENT_TYPES } from '../../utils/constants';
 
-export default function SearchBar({ onSearch, initialFilters = {} }) {
-  const [filters, setFilters] = useState({
-    title: initialFilters.title || '',
-    city: initialFilters.city || '',
-    category: initialFilters.category || '',
-    type: initialFilters.type || '',
-    keyword: initialFilters.keyword || '',
-    date: initialFilters.date || '',
-    organizer: initialFilters.organizer || '',
-  });
+const EMPTY_FILTERS = {
+  title: '',
+  city: '',
+  category: '',
+  type: '',
+  keyword: '',
+  date: '',
+  organizer: '',
+};
+
+export default function SearchBar({ filters = EMPTY_FILTERS, onSearch }) {
+  const [localFilters, setLocalFilters] = useState(EMPTY_FILTERS);
   const [expanded, setExpanded] = useState(false);
 
+  useEffect(() => {
+    setLocalFilters({
+      title: filters.title || '',
+      city: filters.city || '',
+      category: filters.category || '',
+      type: filters.type || '',
+      keyword: filters.keyword || '',
+      date: filters.date || '',
+      organizer: filters.organizer || '',
+    });
+  }, [filters.title, filters.city, filters.category, filters.type, filters.keyword, filters.date, filters.organizer]);
+
   const handleChange = (field, value) => {
-    setFilters((prev) => ({ ...prev, [field]: value }));
+    setLocalFilters((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const params = Object.fromEntries(
-      Object.entries(filters).filter(([, v]) => v !== ''),
+      Object.entries(localFilters).filter(([, v]) => v !== ''),
     );
     onSearch(params);
   };
 
   const handleReset = () => {
-    const empty = {
-      title: '', city: '', category: '', type: '', keyword: '', date: '', organizer: '',
-    };
-    setFilters(empty);
+    setLocalFilters(EMPTY_FILTERS);
     onSearch({});
   };
 
@@ -44,7 +55,7 @@ export default function SearchBar({ onSearch, initialFilters = {} }) {
           <input
             type="text"
             placeholder="Search by title, keyword..."
-            value={filters.title || filters.keyword}
+            value={localFilters.title || localFilters.keyword}
             onChange={(e) => {
               handleChange('title', e.target.value);
               handleChange('keyword', e.target.value);
@@ -65,26 +76,26 @@ export default function SearchBar({ onSearch, initialFilters = {} }) {
         <div className="mt-4 grid gap-4 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-3">
           <Input
             label="City / Location"
-            value={filters.city}
+            value={localFilters.city}
             onChange={(e) => handleChange('city', e.target.value)}
             placeholder="e.g. Indore"
           />
           <Input
             label="Organizer"
-            value={filters.organizer}
+            value={localFilters.organizer}
             onChange={(e) => handleChange('organizer', e.target.value)}
             placeholder="Organizer name"
           />
           <Input
             label="Date"
             type="date"
-            value={filters.date}
+            value={localFilters.date}
             onChange={(e) => handleChange('date', e.target.value)}
           />
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-gray-700">Category</label>
             <select
-              value={filters.category}
+              value={localFilters.category}
               onChange={(e) => handleChange('category', e.target.value)}
               className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
             >
@@ -97,7 +108,7 @@ export default function SearchBar({ onSearch, initialFilters = {} }) {
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-gray-700">Event type</label>
             <select
-              value={filters.type}
+              value={localFilters.type}
               onChange={(e) => handleChange('type', e.target.value)}
               className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
             >

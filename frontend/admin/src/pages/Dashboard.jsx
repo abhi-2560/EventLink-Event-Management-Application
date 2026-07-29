@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Users, CalendarDays, Ticket, IndianRupee, Activity, Tags, BarChart3 } from 'lucide-react';
@@ -8,9 +8,10 @@ import Loader from '../components/ui/Loader';
 import Button from '../components/ui/Button';
 import { getDashboard, getMonthlyReport, getCategoryReport } from '../api/adminApi';
 import { formatCurrency, defaultDateRange } from '../utils/helpers';
+import { useDateRangeParams } from '../hooks/useListSearchParams';
 
 export default function Dashboard() {
-  const [range, setRange] = useState(defaultDateRange);
+  const { range, setRange } = useDateRangeParams(defaultDateRange());
   const params = useMemo(() => ({
     start_date: new Date(range.start).toISOString(),
     end_date: new Date(`${range.end}T23:59:59`).toISOString(),

@@ -101,7 +101,6 @@ def create_registration(
         event_id=event.event_id,
         event_title=event.title,
         event_city=event.city,
-        event_type=event.event_type,
         category_id=event.category_id,
         category_name=event.category_name,
         organizer_id=event.organizer_id,

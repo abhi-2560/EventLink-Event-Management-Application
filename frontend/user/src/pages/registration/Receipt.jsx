@@ -36,7 +36,6 @@ export default function Receipt() {
   const discount = Number(receipt.discount || 0);
   const convenienceFee = Number(receipt.convenience_fee || 0);
   const gatewayFee = Number(receipt.gateway_fee || 0);
-  const platformFee = Number(receipt.platform_fee || 0);
 
   return (
     <Container className="py-10">
@@ -74,7 +73,6 @@ export default function Receipt() {
             {discount > 0 && <Detail label="Discount" value={`-${formatCurrency(discount)}`} />}
             {convenienceFee > 0 && <Detail label="Convenience fee" value={formatCurrency(convenienceFee)} />}
             {gatewayFee > 0 && <Detail label="Gateway fee" value={formatCurrency(gatewayFee)} />}
-            {platformFee > 0 && <Detail label="Platform fee" value={formatCurrency(platformFee)} />}
             <div className="mt-3 border-t border-border pt-3">
               <Detail label="Total paid" value={formatCurrency(receipt.amount)} bold />
             </div>

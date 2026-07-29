@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import StatCard from '../../components/organizer/StatCard';
 import { MonthlyBarChart, CategoryPieChart } from '../../components/organizer/DashboardCharts';
@@ -7,6 +7,7 @@ import StatusBadge from '../../components/organizer/StatusBadge';
 import { getSalesSummary, getMonthlyReport, getCategoryReport, getPeriodReport } from '../../api/organizerApi';
 import { formatCurrency, formatDate } from '../../utils/constants';
 import { CalendarDays, IndianRupee, Users, Ticket } from 'lucide-react';
+import { useDateRangeParams } from '../../hooks/useListSearchParams';
 
 function defaultRange() {
   const end = new Date();
@@ -16,7 +17,7 @@ function defaultRange() {
 }
 
 export default function SalesReport() {
-  const [range, setRange] = useState(defaultRange);
+  const { range, setRange } = useDateRangeParams(defaultRange());
   const params = useMemo(() => ({
     start_date: new Date(range.start).toISOString(),
     end_date: new Date(`${range.end}T23:59:59`).toISOString(),

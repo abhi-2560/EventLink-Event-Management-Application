@@ -9,11 +9,16 @@ import ConfirmDialog from './ConfirmDialog';
 import { formatCurrency, formatDateShort } from '../../utils/constants';
 import { closeRegistration, archiveEvent } from '../../api/organizerApi';
 import { showError, showSuccess } from '../../utils/toast';
+import { useListSearchParams } from '../../hooks/useListSearchParams';
+
+const LIST_PARAMS = {
+  q: { default: '' },
+  status: { default: '' },
+  page: { default: 1, type: 'number' },
+};
 
 export default function EventTable({ events, loading }) {
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [page, setPage] = useState(1);
+  const { q: search, status: statusFilter, page, setParam } = useListSearchParams(LIST_PARAMS);
   const [confirm, setConfirm] = useState(null);
   const queryClient = useQueryClient();
   const pageSize = 8;
@@ -50,14 +55,14 @@ export default function EventTable({ events, loading }) {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <input
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            onChange={(e) => { setParam('q', e.target.value, { resetKeys: ['page'] }); }}
             placeholder="Search events..."
             className="w-full rounded-lg border border-border py-2.5 pl-10 pr-4 text-sm"
           />
         </div>
         <select
           value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          onChange={(e) => { setParam('status', e.target.value, { resetKeys: ['page'] }); }}
           className="rounded-lg border border-border px-3 py-2.5 text-sm"
         >
           <option value="">All statuses</option>
@@ -131,7 +136,7 @@ export default function EventTable({ events, loading }) {
           <p className="px-4 py-10 text-center text-sm text-muted">No events found.</p>
         )}
         <div className="px-4 pb-4">
-          <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
+          <Pagination page={safePage} totalPages={totalPages} onPageChange={(p) => setParam('page', p)} />
           <p className="text-xs text-muted">{total} event(s) total</p>
         </div>
       </div>

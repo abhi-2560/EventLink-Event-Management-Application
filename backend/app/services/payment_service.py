@@ -25,8 +25,6 @@ from .exceptions import ConflictError, NotFoundError, ValidationError
 _payment_repo = PaymentRepository()
 _registration_repo = RegistrationRepository()
 
-PLATFORM_FEE_RATE = Decimal("0")
-
 
 def _generate_order_id() -> str:
     return f"ORD-{secrets.token_hex(8).upper()}"
@@ -69,7 +67,6 @@ def create_order(registration_id):
             discount=registration.discount_amount,
             convenience_fee=registration.convenience_fee,
             gateway_fee=registration.gateway_fee,
-            platform_fee=(registration.total_amount or Decimal(0)) * PLATFORM_FEE_RATE,
             amount=registration.total_amount,
         )
     else:
@@ -185,8 +182,6 @@ def _bump_sales_totals(payment):
         obj.total_registrations = (obj.total_registrations or 0) + 1
         obj.total_tickets_sold = (obj.total_tickets_sold or 0) + registration.seats_booked
         obj.total_sales = (obj.total_sales or Decimal(0)) + amount
-        if hasattr(obj, "platform_fee_generated"):
-            obj.platform_fee_generated = (obj.platform_fee_generated or Decimal(0)) + (payment.platform_fee or Decimal(0))
 
     db.session.commit()
 

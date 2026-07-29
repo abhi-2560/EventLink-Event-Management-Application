@@ -40,7 +40,6 @@ class Payment(db.Model):
     discount = db.Column(db.Numeric(10, 2), nullable=True, server_default=text("0"))
     convenience_fee = db.Column(db.Numeric(10, 2), nullable=True, server_default=text("0"))
     gateway_fee = db.Column(db.Numeric(10, 2), nullable=True, server_default=text("0"))
-    platform_fee = db.Column(db.Numeric(10, 2), nullable=True, server_default=text("0"))
     amount = db.Column(db.Numeric(12, 2), nullable=False)
     payment_status = db.Column(String(20), nullable=True, server_default=text("'INITIATED'"))
     failure_reason = db.Column(Text, nullable=True)

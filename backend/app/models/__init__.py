@@ -5,7 +5,6 @@ from .coupon import Coupon
 from .event import Event
 from .organizer import Organizer
 from .payment import Payment
-from .platform_settings import PlatformSettings
 from .registration import Registration
 
 __all__ = [
@@ -16,7 +15,6 @@ __all__ = [
     "Event",
     "Organizer",
     "Payment",
-    "PlatformSettings",
     "Registration",
 ]
 

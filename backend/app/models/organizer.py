@@ -28,7 +28,6 @@ class Organizer(db.Model):
     total_registrations = db.Column(Integer, nullable=True, server_default=text("0"))
     total_tickets_sold = db.Column(Integer, nullable=True, server_default=text("0"))
     total_sales = db.Column(db.Numeric(12, 2), nullable=True, server_default=text("0"))
-    platform_fee_generated = db.Column(db.Numeric(12, 2), nullable=True, server_default=text("0"))
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
     updated_at = db.Column(
         db.DateTime(timezone=True),

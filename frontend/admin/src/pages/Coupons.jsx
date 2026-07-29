@@ -13,6 +13,12 @@ import { createCoupon, deleteCoupon, getCoupons, updateCoupon } from '../api/adm
 import { couponSchema } from '../schemas/adminSchemas';
 import { formatCurrency, paginate } from '../utils/helpers';
 import { showError, showSuccess } from '../utils/toast';
+import { useListSearchParams } from '../hooks/useListSearchParams';
+
+const LIST_PARAMS = {
+  q: { default: '' },
+  page: { default: 1, type: 'number' },
+};
 
 function toPayload(data) {
   return {
@@ -26,8 +32,7 @@ function toPayload(data) {
 
 export default function Coupons() {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
+  const { q: search, page, setParam } = useListSearchParams(LIST_PARAMS);
   const [modal, setModal] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const pageSize = 10;
@@ -99,7 +104,7 @@ export default function Coupons() {
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
         <input
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={(e) => setParam('q', e.target.value, { resetKeys: ['page'] })}
           placeholder="Search by code or description..."
           className="w-full rounded-lg border border-border py-2 pl-10 pr-3 text-sm"
         />
@@ -146,7 +151,7 @@ export default function Coupons() {
               ))}
             </tbody>
           </table>
-          <div className="px-4 pb-4"><PaginationFooter page={safePage} totalPages={totalPages} total={total} onPageChange={setPage} /></div>
+          <div className="px-4 pb-4"><PaginationFooter page={safePage} totalPages={totalPages} total={total} onPageChange={(p) => setParam('page', p)} /></div>
         </div>
       )}
 

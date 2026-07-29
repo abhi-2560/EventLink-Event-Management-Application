@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import { CalendarDays, Users, IndianRupee, FileText, Lock } from 'lucide-react';
@@ -7,6 +7,7 @@ import { MonthlyBarChart, CategoryPieChart } from '../../components/organizer/Da
 import Loader from '../../components/common/Loader';
 import { getDashboard, getMonthlyReport, getCategoryReport } from '../../api/organizerApi';
 import { formatCurrency } from '../../utils/constants';
+import { useDateRangeParams } from '../../hooks/useListSearchParams';
 
 
 
@@ -22,7 +23,7 @@ function defaultRange() {
 
 
 export default function OrganizerDashboard() {
-  const [range, setRange] = useState(defaultRange);
+  const { range, setRange } = useDateRangeParams(defaultRange());
   const params = useMemo(() => ({
     start_date: new Date(range.start).toISOString(),
     end_date: new Date(`${range.end}T23:59:59`).toISOString(),

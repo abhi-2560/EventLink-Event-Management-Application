@@ -24,12 +24,12 @@ def update_platform_fees():
     if "convenience_fee" not in data or "gateway_fee" not in data:
         raise ValidationError("convenience_fee and gateway_fee are required")
 
-    settings = platform_settings_service.update_settings(
+    admin = platform_settings_service.update_settings(
         data.get("convenience_fee"),
         data.get("gateway_fee"),
     )
     return jsonify({
-        "convenience_fee": str(settings.convenience_fee),
-        "gateway_fee": str(settings.gateway_fee),
-        "updated_at": settings.updated_at.isoformat() if settings.updated_at else None,
+        "convenience_fee": str(admin.convenience_fee),
+        "gateway_fee": str(admin.gateway_fee),
+        "updated_at": admin.updated_at.isoformat() if admin.updated_at else None,
     }), 200

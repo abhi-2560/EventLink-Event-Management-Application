@@ -1,32 +1,34 @@
-"""Admin-managed global platform fees applied at booking time."""
+"""Admin-managed global platform fees stored on the admin table."""
 
 from __future__ import annotations
 
 from decimal import Decimal
 
 from app.extensions import db
-from app.models import PlatformSettings
+from app.models import Admin
 from .exceptions import ValidationError
 
 
-def get_settings() -> PlatformSettings:
-    settings = db.session.get(PlatformSettings, 1)
-    if settings is None:
-        settings = PlatformSettings(id=1, convenience_fee=Decimal(0), gateway_fee=Decimal(0))
-        db.session.add(settings)
-        db.session.commit()
-    return settings
+def _fee_admin() -> Admin:
+    admin = Admin.query.order_by(Admin.created_at.asc()).first()
+    if admin is None:
+        raise ValidationError("No admin account exists to store platform fees")
+    return admin
+
+
+def get_settings() -> Admin:
+    return _fee_admin()
 
 
 def get_fees() -> dict[str, Decimal]:
-    settings = get_settings()
+    admin = _fee_admin()
     return {
-        "convenience_fee": Decimal(settings.convenience_fee or 0),
-        "gateway_fee": Decimal(settings.gateway_fee or 0),
+        "convenience_fee": Decimal(admin.convenience_fee or 0),
+        "gateway_fee": Decimal(admin.gateway_fee or 0),
     }
 
 
-def update_settings(convenience_fee, gateway_fee) -> PlatformSettings:
+def update_settings(convenience_fee, gateway_fee) -> Admin:
     try:
         convenience = Decimal(str(convenience_fee))
         gateway = Decimal(str(gateway_fee))
@@ -36,8 +38,9 @@ def update_settings(convenience_fee, gateway_fee) -> PlatformSettings:
     if convenience < 0 or gateway < 0:
         raise ValidationError("Fees must be zero or greater")
 
-    settings = get_settings()
-    settings.convenience_fee = convenience
-    settings.gateway_fee = gateway
+    for admin in Admin.query.all():
+        admin.convenience_fee = convenience
+        admin.gateway_fee = gateway
+
     db.session.commit()
-    return settings
+    return _fee_admin()

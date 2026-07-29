@@ -10,11 +10,16 @@ import Button from '../components/ui/Button';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { getEvents, archiveEvent } from '../api/adminApi';
 import { formatCurrency, formatDateShort, paginate } from '../utils/helpers';
+import { useListSearchParams } from '../hooks/useListSearchParams';
+
+const LIST_PARAMS = {
+  q: { default: '' },
+  status: { default: '' },
+  page: { default: 1, type: 'number' },
+};
 
 export default function Events() {
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
-  const [page, setPage] = useState(1);
+  const { q: search, status, page, setParam } = useListSearchParams(LIST_PARAMS);
   const [confirm, setConfirm] = useState(null);
   const queryClient = useQueryClient();
   const pageSize = 10;
@@ -43,9 +48,9 @@ export default function Events() {
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search events..." className="w-full rounded-lg border border-border py-2 pl-10 pr-3 text-sm" />
+          <input value={search} onChange={(e) => setParam('q', e.target.value, { resetKeys: ['page'] })} placeholder="Search events..." className="w-full rounded-lg border border-border py-2 pl-10 pr-3 text-sm" />
         </div>
-        <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} className="rounded-lg border border-border px-3 py-2 text-sm">
+        <select value={status} onChange={(e) => setParam('status', e.target.value, { resetKeys: ['page'] })} className="rounded-lg border border-border px-3 py-2 text-sm">
           <option value="">All statuses</option>
           <option value="DRAFT">Draft</option>
           <option value="PUBLISHED">Published</option>
@@ -88,7 +93,7 @@ export default function Events() {
               ))}
             </tbody>
           </table>
-          <div className="px-4 pb-4"><Pagination page={safePage} totalPages={totalPages} total={total} onPageChange={setPage} /></div>
+          <div className="px-4 pb-4"><Pagination page={safePage} totalPages={totalPages} total={total} onPageChange={(p) => setParam('page', p)} /></div>
         </div>
       )}
 

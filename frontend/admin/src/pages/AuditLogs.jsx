@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, ScrollText } from 'lucide-react';
@@ -7,12 +6,17 @@ import EmptyState from '../components/ui/EmptyState';
 import Pagination from '../components/ui/Pagination';
 import { getAuditLogs } from '../api/adminApi';
 import { formatDate } from '../utils/helpers';
+import { useListSearchParams } from '../hooks/useListSearchParams';
+
+const LIST_PARAMS = {
+  search: { default: '' },
+  entity_type: { default: '' },
+  actor_type: { default: '' },
+  page: { default: 1, type: 'number' },
+};
 
 export default function AuditLogs() {
-  const [search, setSearch] = useState('');
-  const [entityType, setEntityType] = useState('');
-  const [actorType, setActorType] = useState('');
-  const [page, setPage] = useState(1);
+  const { search, entity_type: entityType, actor_type: actorType, page, setParam } = useListSearchParams(LIST_PARAMS);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['admin-audit', search, entityType, actorType, page],
@@ -33,9 +37,9 @@ export default function AuditLogs() {
       <div className="grid gap-3 sm:grid-cols-4">
         <div className="relative sm:col-span-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search action, entity, actor..." className="w-full rounded-lg border border-border py-2 pl-10 pr-3 text-sm" />
+          <input value={search} onChange={(e) => setParam('search', e.target.value, { resetKeys: ['page'] })} placeholder="Search action, entity, actor..." className="w-full rounded-lg border border-border py-2 pl-10 pr-3 text-sm" />
         </div>
-        <select value={entityType} onChange={(e) => { setEntityType(e.target.value); setPage(1); }} className="rounded-lg border border-border px-3 py-2 text-sm">
+        <select value={entityType} onChange={(e) => setParam('entity_type', e.target.value, { resetKeys: ['page'] })} className="rounded-lg border border-border px-3 py-2 text-sm">
           <option value="">All entities</option>
           <option value="event">Event</option>
           <option value="organizer">Organizer</option>
@@ -44,7 +48,7 @@ export default function AuditLogs() {
           <option value="coupon">Coupon</option>
           <option value="category">Category</option>
         </select>
-        <select value={actorType} onChange={(e) => { setActorType(e.target.value); setPage(1); }} className="rounded-lg border border-border px-3 py-2 text-sm">
+        <select value={actorType} onChange={(e) => setParam('actor_type', e.target.value, { resetKeys: ['page'] })} className="rounded-lg border border-border px-3 py-2 text-sm">
           <option value="">All actors</option>
           <option value="ADMIN">Admin</option>
           <option value="ORGANIZER">Organizer</option>
@@ -84,7 +88,7 @@ export default function AuditLogs() {
             </tbody>
           </table>
           <div className="px-4 pb-4">
-            <Pagination page={data.page} totalPages={data.total_pages} total={data.total} onPageChange={setPage} />
+            <Pagination page={data.page} totalPages={data.total_pages} total={data.total} onPageChange={(p) => setParam('page', p)} />
           </div>
         </div>
       )}

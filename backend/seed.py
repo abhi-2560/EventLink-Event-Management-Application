@@ -3,7 +3,6 @@ from app.extensions import db
 from app.models.admin import Admin
 from app.models.category import Category
 from app.models.event import Event
-from app.models.platform_settings import PlatformSettings
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash
 
@@ -29,6 +28,8 @@ with app.app_context():
             email="admin@example.com",
             password_hash=generate_password_hash("Admin@123"),
             status="ACTIVE",
+            convenience_fee=0,
+            gateway_fee=0,
         )
         db.session.add(admin)
         db.session.commit()
@@ -38,10 +39,6 @@ with app.app_context():
         if not Category.query.filter_by(name=name).first():
             db.session.add(Category(name=name, description=description, is_default=True))
             print(f"Category created: {name}")
-
-    if db.session.get(PlatformSettings, 1) is None:
-        db.session.add(PlatformSettings(id=1, convenience_fee=0, gateway_fee=0))
-        print("Platform fee settings initialized.")
 
     db.session.commit()
 
