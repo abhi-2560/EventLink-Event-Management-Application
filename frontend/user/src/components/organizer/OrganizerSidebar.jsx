@@ -71,7 +71,7 @@ export default function OrganizerSidebar() {
         open ? 'translate-x-0' : '-translate-x-full',
       )}>
         <div className="flex h-16 items-center border-b border-border px-6">
-          <span className="font-display text-2xl text-brand-900">Organizer</span>
+          <button onClick={()=>navigate('/')} className="font-display text-2xl text-brand-900">Organizer</button>
         </div>
         {nav}
       </aside>

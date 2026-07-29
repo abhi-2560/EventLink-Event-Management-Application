@@ -67,7 +67,7 @@ export default function EventTable({ events, loading }) {
           <option value="ARCHIVED">Archived</option>
         </select>
         <Link to="/organizer/events/new">
-          <Button>Create Event</Button>
+          <Button >Create Event</Button>
         </Link>
       </div>
 
