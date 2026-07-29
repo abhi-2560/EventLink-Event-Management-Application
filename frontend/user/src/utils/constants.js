@@ -45,3 +45,11 @@ export const formatDateShort = (dateStr) => {
     year: 'numeric',
   }).format(new Date(dateStr));
 };
+
+export const formatTime = (dateStr) => {
+  if (!dateStr) return '—';
+  return new Intl.DateTimeFormat('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(dateStr));
+};
