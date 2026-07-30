@@ -10,7 +10,7 @@ export default function Hero({ searchValue, onSearchChange, onSearchSubmit }) {
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 pb-28 pt-16 text-white sm:pb-32 sm:pt-20 lg:pb-36">
+    <section className="relative overflow-hidden bg-black pb-28 pt-16 text-white sm:pb-32 sm:pt-20 lg:pb-36">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.14),transparent_55%)]" />
       <div className="absolute -right-20 top-10 hidden h-72 w-72 rounded-full bg-brand-400/20 blur-3xl lg:block" />
       <div className="absolute -left-16 bottom-0 hidden h-64 w-64 rounded-full bg-accent-400/10 blur-3xl lg:block" />
@@ -47,12 +47,12 @@ export default function Hero({ searchValue, onSearchChange, onSearchSubmit }) {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <a href="#browse-events">
-                <Button type="button" variant="secondary" className="border-white/20 bg-white/10 text-white hover:bg-white/20">
+                <Button type="button" variant="secondary" className="text-brand-100 hover:bg-white/10 hover:text-white hover:border-purple-600">
                   Explore Events
                 </Button>
               </a>
               <Link to="/organizer/signup">
-                <Button type="button" variant="ghost" className="text-brand-100 hover:bg-white/10 hover:text-white">
+                <Button type="button" variant="secondary" className="text-brand-100 hover:bg-white/10 hover:text-white hover:border-purple-600">
                   List your event
                 </Button>
               </Link>
