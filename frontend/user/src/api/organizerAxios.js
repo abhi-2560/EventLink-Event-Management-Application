@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/constants';
+import { toApiError } from '../utils/apiError';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -17,7 +18,6 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message = error.response?.data?.error || error.message || 'Something went wrong';
     if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.removeItem('organizer_token');
       if (window.location.pathname.startsWith('/organizer')
@@ -26,7 +26,7 @@ api.interceptors.response.use(
         window.location.href = '/organizer/login';
       }
     }
-    return Promise.reject(new Error(message));
+    return Promise.reject(toApiError(error));
   },
 );
 

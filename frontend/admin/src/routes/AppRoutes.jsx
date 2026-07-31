@@ -1,5 +1,4 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../layouts/AdminLayout';
 import Login from '../pages/Login';
 import Dashboard from '../pages/Dashboard';
@@ -15,24 +14,13 @@ import AuditLogDetail from '../pages/AuditLogDetail';
 import Coupons from '../pages/Coupons';
 import PlatformFeeSettings from '../pages/PlatformFeeSettings';
 import Profile from '../pages/Profile';
-
-function Protected({ children }) {
-  const { isAuthenticated } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  return children;
-}
-
-function Guest({ children }) {
-  const { isAuthenticated } = useAuth();
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
-  return children;
-}
+import { GuestRoute, ProtectedRoute } from './RouteGuards';
 
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<Guest><Login /></Guest>} />
-      <Route element={<Protected><AdminLayout /></Protected>}>
+      <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+      <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/organizers" element={<Organizers />} />
