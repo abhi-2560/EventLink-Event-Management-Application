@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/constants';
+import { toApiError } from '../utils/apiError';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -8,10 +9,7 @@ const api = axios.create({
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    const message = error.response?.data?.error || error.message || 'Something went wrong';
-    return Promise.reject(new Error(message));
-  },
+  (error) => Promise.reject(toApiError(error)),
 );
 
 export default api;

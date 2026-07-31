@@ -1,0 +1,16 @@
+import { screen } from '@testing-library/react';
+import { Route, Routes } from 'react-router-dom';
+import ProtectedRoute from './ProtectedRoute';
+import { renderWithProviders } from '../test/test-utils';
+
+test('redirects guests to organizer login', () => {
+  renderWithProviders(
+    <Routes>
+      <Route path="/organizer/login" element={<p>Organizer login</p>} />
+      <Route path="/organizer/dashboard" element={<ProtectedRoute><p>Dashboard</p></ProtectedRoute>} />
+    </Routes>,
+    { route: '/organizer/dashboard' },
+  );
+
+  expect(screen.getByText('Organizer login')).toBeInTheDocument();
+});

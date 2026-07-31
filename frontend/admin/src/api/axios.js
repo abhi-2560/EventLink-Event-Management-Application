@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/helpers';
+import { toApiError } from '../utils/apiError';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -15,14 +16,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    const msg = err.response?.data?.error || err.message || 'Request failed';
     if ([401, 403].includes(err.response?.status)) {
       localStorage.removeItem('admin_token');
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
     }
-    return Promise.reject(new Error(msg));
+    return Promise.reject(toApiError(err));
   },
 );
 
