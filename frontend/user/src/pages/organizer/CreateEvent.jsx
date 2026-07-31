@@ -1,15 +1,31 @@
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import EventForm from '../../components/organizer/EventForm';
-import { createEvent, publishEvent } from '../../api/organizerApi';
+import { createEvent, publishEvent, uploadBanner, uploadEventMedia } from '../../api/organizerApi';
+import { validatePendingMedia } from '../../components/organizer/EventMediaManager';
 import { eventToFormDefaults } from '../../schemas/organizerSchemas';
-import { showError, showSuccess } from '../../utils/toast';
+import { showError, showSuccess, showWarning } from '../../utils/toast';
 
 export default function CreateEvent() {
   const navigate = useNavigate();
 
+  const uploadSelectedMedia = async (eventId, media) => {
+    const valid = validatePendingMedia(media);
+    try {
+      if (valid.banner) await uploadBanner(eventId, valid.banner);
+      await Promise.all(valid.images.map((file) => uploadEventMedia(eventId, file, 'IMAGE')));
+      await Promise.all(valid.videos.map((file) => uploadEventMedia(eventId, file, 'VIDEO')));
+    } catch (error) {
+      showWarning('Event was created, but some media could not be uploaded. You can retry it from Edit Event.');
+    }
+  };
+
   const saveMutation = useMutation({
-    mutationFn: createEvent,
+    mutationFn: async ({ payload, media }) => {
+      const event = await createEvent(payload);
+      await uploadSelectedMedia(event.event_id, media);
+      return event;
+    },
     onSuccess: (event) => {
       showSuccess('Event saved as draft');
       navigate(`/organizer/events/${event.event_id}`);
@@ -18,8 +34,9 @@ export default function CreateEvent() {
   });
 
   const publishMutation = useMutation({
-    mutationFn: async (payload) => {
+    mutationFn: async ({ payload, media }) => {
       const event = await createEvent(payload);
+      await uploadSelectedMedia(event.event_id, media);
       return publishEvent(event.event_id);
     },
     onSuccess: (event) => {
@@ -39,11 +56,11 @@ export default function CreateEvent() {
       </div>
       <EventForm
         defaultValues={eventToFormDefaults()}
-        onSubmit={(payload) => saveMutation.mutate(payload)}
+        onSubmit={(payload, media) => saveMutation.mutate({ payload, media })}
         loading={loading}
         submitLabel="Save as Draft"
         showPublish
-        onPublish={(payload) => publishMutation.mutate(payload)}
+        onPublish={(payload, media) => publishMutation.mutate({ payload, media })}
       />
     </div>
   );

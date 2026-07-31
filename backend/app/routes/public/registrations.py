@@ -3,15 +3,14 @@ from flask import jsonify, request
 from app.services import booking_service
 from app.services.exceptions import ValidationError
 from app.utils.serializers import serialize_registration
+from app.validation import validate_registration_payload
 from . import public_bp
 
 
 @public_bp.route("/registrations", methods=["POST"])
 def create_registration():
-    data = request.get_json(silent=True) or {}
-    event_id = data.get("event_id")
-    if not event_id:
-        raise ValidationError("event_id is required")
+    data = validate_registration_payload(request.get_json(silent=True) or {})
+    event_id = data["event_id"]
 
     registration, payment, order_id = booking_service.create_registration(
         event_id=event_id,

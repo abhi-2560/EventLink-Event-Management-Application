@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import Input, { Select, Textarea } from '../common/Input';
@@ -17,6 +18,7 @@ export default function EventForm({
   isEdit = false,
   minCapacity = 1,
 }) {
+  const [media, setMedia] = useState({ banner: null, images: [], videos: [] });
   const { data: categories, isLoading } = useQuery({
     queryKey: ['organizer-categories'],
     queryFn: getCategories,
@@ -33,7 +35,7 @@ export default function EventForm({
   if (isLoading) return <Loader message="Loading form..." />;
 
   return (
-    <form onSubmit={handleSubmit((data) => onSubmit(formToEventPayload(data)))} className="space-y-8">
+    <form onSubmit={handleSubmit((data) => onSubmit(formToEventPayload(data), media))} className="space-y-8">
       <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
         <h3 className="text-lg font-semibold text-gray-900">Basic details</h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -58,6 +60,19 @@ export default function EventForm({
           <Input label="Start date & time" type="datetime-local" required {...register('start_datetime')} error={errors.start_datetime?.message} />
         </div>
       </section>
+
+      {!isEdit && (
+        <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900">Multimedia</h3>
+          <p className="mt-1 text-sm text-muted">Optional files are uploaded after the event is created.</p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <FileField label="Banner image" accept="image/jpeg,image/png,image/webp" onChange={(files) => setMedia((current) => ({ ...current, banner: files[0] || null }))} />
+            <FileField label="Gallery images" accept="image/jpeg,image/png,image/webp" multiple onChange={(files) => setMedia((current) => ({ ...current, images: [...files] }))} />
+            <FileField label="Videos" accept="video/mp4,video/webm" multiple onChange={(files) => setMedia((current) => ({ ...current, videos: [...files] }))} />
+          </div>
+          <p className="mt-3 text-xs text-muted">Images: JPEG, PNG, or WebP up to 5 MB. Videos: MP4 or WebM up to 50 MB.</p>
+        </section>
+      )}
 
       <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
         <h3 className="text-lg font-semibold text-gray-900">Location</h3>
@@ -122,12 +137,21 @@ export default function EventForm({
             type="button"
             variant="success"
             loading={loading}
-            onClick={handleSubmit((data) => onPublish(formToEventPayload(data)))}
+            onClick={handleSubmit((data) => onPublish(formToEventPayload(data), media))}
           >
             Publish Event
           </Button>
         )}
       </div>
     </form>
+  );
+}
+
+function FileField({ label, accept, multiple, onChange }) {
+  return (
+    <label className="block text-sm font-medium text-gray-700">
+      {label}
+      <input className="mt-1 block w-full text-sm text-muted" type="file" accept={accept} multiple={multiple} onChange={(event) => onChange(event.target.files)} />
+    </label>
   );
 }

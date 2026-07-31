@@ -37,6 +37,11 @@ class ValidationError(ServiceError):
     status_code = 422
 
 
+class ServiceUnavailableError(ServiceError):
+    """A configured external dependency is unavailable."""
+    status_code = 503
+
+
 class SeatsUnavailableError(ConflictError):
     """Not enough available_seats to satisfy the requested hold."""
     pass

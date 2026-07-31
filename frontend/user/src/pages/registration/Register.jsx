@@ -116,6 +116,27 @@ export default function Register() {
 
       <h1 className="font-display text-3xl text-gray-900">Register for {event.title}</h1>
       <p className="mt-2 text-muted">{event.available_seats} seats available</p>
+      <img
+        src={event.banner_url || '/event-placeholder.svg'}
+        alt={`${event.title} banner`}
+        className="mt-6 h-56 w-full rounded-2xl object-cover"
+      />
+      {event.images?.length > 0 && (
+        <section className="mt-6">
+          <h2 className="mb-3 text-lg font-semibold text-gray-900">Gallery</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {event.images.map((image) => <img key={image.media_id} src={image.media_url} alt="" className="h-36 w-full rounded-xl object-cover" />)}
+          </div>
+        </section>
+      )}
+      {event.videos?.length > 0 && (
+        <section className="mt-6">
+          <h2 className="mb-3 text-lg font-semibold text-gray-900">Videos</h2>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {event.videos.map((video) => <video key={video.media_id} controls src={video.media_url} className="w-full rounded-xl bg-black" />)}
+          </div>
+        </section>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">

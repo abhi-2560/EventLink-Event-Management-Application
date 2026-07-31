@@ -34,6 +34,29 @@ export const closeRegistration = (eventId) =>
 export const archiveEvent = (eventId) =>
   api.post(`/organizer/events/${eventId}/archive`).then((r) => r.data);
 
+export const uploadBanner = (eventId, file) => {
+  const data = new FormData();
+  data.append('file', file);
+  return api.post(`/organizer/events/${eventId}/banner`, data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then((r) => r.data);
+};
+
+export const deleteBanner = (eventId) =>
+  api.delete(`/organizer/events/${eventId}/banner`).then((r) => r.data);
+
+export const uploadEventMedia = (eventId, file, mediaType) => {
+  const data = new FormData();
+  data.append('file', file);
+  data.append('media_type', mediaType);
+  return api.post(`/organizer/events/${eventId}/media`, data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then((r) => r.data);
+};
+
+export const deleteEventMedia = (eventId, mediaId) =>
+  api.delete(`/organizer/events/${eventId}/media/${mediaId}`).then((r) => r.data);
+
 export const getRegistrations = (eventId) =>
   api.get(`/organizer/events/${eventId}/registrations`).then((r) => r.data);
 

@@ -35,7 +35,8 @@ function toPayload(data) {
 export default function Coupons() {
   const queryClient = useQueryClient();
   const { q: search, page, setParam } = useListSearchParams(LIST_PARAMS);
-const debouncedSearch = useDebounce(search, 500);
+
+  const debouncedSearch = useDebounce(search, 750);
 
   const [modal, setModal] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -71,10 +72,22 @@ const debouncedSearch = useDebounce(search, 500);
     onError: showError,
   });
 
-  const filtered = useMemo(() => (data || []).filter((c) => {
-    const q = search.toLowerCase();
-    return !q || c.code?.toLowerCase().includes(q) || c.description?.toLowerCase().includes(q);
-  }), [data, search]);
+  // const filtered = useMemo(() => (data || []).filter((c) => {
+  //   const q = search.toLowerCase();
+  //   return !q || c.code?.toLowerCase().includes(q) || c.description?.toLowerCase().includes(q);
+  // }), [data, search]);
+
+  const filtered = useMemo(() => {
+    const q = debouncedSearch;
+
+    return (data || []).filter((c) => {
+      return (
+        !q ||
+        c.code?.toLowerCase().includes(q) ||
+        c.description?.toLowerCase().includes(q)
+      );
+    });
+  }, [data, debouncedSearch]);
 
   const { items, page: safePage, totalPages, total } = paginate(filtered, page, pageSize);
 

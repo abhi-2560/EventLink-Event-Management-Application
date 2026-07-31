@@ -20,11 +20,11 @@ def create_app(config_class=Config):
 
     configure_logging(app)
 
-    CORS(app, resources={r"/*": {"origins": [
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-    ]}})
+    CORS(
+        app,
+        resources={r"/*": {"origins": app.config["CORS_ORIGINS"]}},
+        supports_credentials=True,
+    )
 
     db.init_app(app)
     migrate.init_app(app, db)

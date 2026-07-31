@@ -6,6 +6,11 @@ export default function EventInfo({ event }) {
 
   return (
     <div className="space-y-6">
+      <img
+        src={event.banner_url || '/event-placeholder.svg'}
+        alt={`${event.title} banner`}
+        className="h-64 w-full rounded-2xl object-cover"
+      />
       <div>
         <span className="inline-flex rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-700">
           {event.category_name}
@@ -15,6 +20,28 @@ export default function EventInfo({ event }) {
           <p className="mt-4 text-base leading-relaxed text-gray-600">{event.description}</p>
         )}
       </div>
+
+      {event.images?.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-xl font-semibold text-gray-900">Gallery</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {event.images.map((image) => (
+              <img key={image.media_id} src={image.media_url} alt="" className="h-48 w-full rounded-xl object-cover" />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {event.videos?.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-xl font-semibold text-gray-900">Videos</h2>
+          <div className="space-y-4">
+            {event.videos.map((video) => (
+              <video key={video.media_id} controls className="w-full rounded-xl" src={video.media_url} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <InfoRow icon={Calendar} label="Date & time" value={formatDate(event.start_datetime)} />

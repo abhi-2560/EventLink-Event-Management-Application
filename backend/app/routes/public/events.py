@@ -54,4 +54,4 @@ def search_events():
 @public_bp.route("/events/<event_id>", methods=["GET"])
 def get_event(event_id):
     event = event_service.get_public_event(event_id)
-    return jsonify(serialize_event(event, use_platform_fees=True)), 200
+    return jsonify(serialize_event(event, use_platform_fees=True, include_media=True)), 200

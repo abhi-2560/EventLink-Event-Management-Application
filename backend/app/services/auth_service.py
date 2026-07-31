@@ -14,6 +14,10 @@ Flask-free and independently testable.
 from __future__ import annotations
 
 import re
+import hashlib
+import secrets
+import uuid
+from datetime import timedelta
 
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -21,11 +25,13 @@ from flask import current_app
 
 from app.repositories.admin_repository import AdminRepository
 from app.repositories.organizer_repository import OrganizerRepository
+from app.repositories.refresh_token_repository import RefreshTokenRepository
 from .audit_service import log_action
 from .exceptions import ConflictError, NotFoundError, ValidationError
 
 _admin_repo = AdminRepository()
 _organizer_repo = OrganizerRepository()
+_refresh_repo = RefreshTokenRepository()
 
 _RESET_SALT = "password-reset"
 _RESET_MAX_AGE_SECONDS = 30 * 60  # 30 minutes
@@ -134,7 +140,7 @@ def authenticate(actor_type: str, email: str, password: str, ip_address: str | N
 
 
 def logout(actor_type: str, actor_id, actor_email: str | None = None, ip_address: str | None = None):
-    """No server-side session to invalidate (token auth) - this only records the audit event."""
+    """Record an audit event; callers revoke a refresh session when supplied."""
     log_action(
         actor_type=actor_type.upper(),
         actor_id=actor_id,
@@ -144,6 +150,65 @@ def logout(actor_type: str, actor_id, actor_email: str | None = None, ip_address
         entity_id=actor_id,
         ip_address=ip_address,
     )
+
+
+def _hash_refresh_token(raw_token: str) -> str:
+    return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+
+
+def issue_refresh_token(actor_type: str, actor_id, *, user_agent=None, ip_address=None, family_id=None):
+    """Create an opaque refresh token and persist only its SHA-256 hash."""
+    raw_token = secrets.token_urlsafe(48)
+    expiry = _now() + timedelta(seconds=current_app.config["JWT_REFRESH_TOKEN_EXPIRES_SECONDS"])
+    session = _refresh_repo.create(
+        actor_type=actor_type,
+        actor_id=actor_id,
+        token_hash=_hash_refresh_token(raw_token),
+        family_id=family_id or uuid.uuid4(),
+        expires_at=expiry,
+        user_agent=user_agent,
+        ip_address=ip_address,
+    )
+    return raw_token, session
+
+
+def rotate_refresh_token(raw_token: str, actor_type: str, *, user_agent=None, ip_address=None):
+    """Rotate one active token; replay revokes its whole token family."""
+    session = _refresh_repo.get_by_hash(_hash_refresh_token(raw_token))
+    now = _now()
+    if session is None or session.actor_type != actor_type:
+        raise ValidationError("Refresh token is invalid or expired")
+    if session.revoked_at is not None:
+        for family_session in _refresh_repo.get_family(session.family_id):
+            family_session.revoked_at = family_session.revoked_at or now
+        _refresh_repo.update()
+        raise ValidationError("Refresh token has already been used")
+    if session.expires_at <= now:
+        session.revoked_at = now
+        _refresh_repo.update()
+        raise ValidationError("Refresh token is invalid or expired")
+
+    session.revoked_at = now
+    session.last_used_at = now
+    new_raw_token, replacement = issue_refresh_token(
+        actor_type,
+        session.actor_id,
+        user_agent=user_agent,
+        ip_address=ip_address,
+        family_id=session.family_id,
+    )
+    session.replaced_by_token_id = replacement.token_id
+    _refresh_repo.update()
+    return new_raw_token, replacement
+
+
+def revoke_refresh_token(raw_token: str | None):
+    if not raw_token:
+        return
+    session = _refresh_repo.get_by_hash(_hash_refresh_token(raw_token))
+    if session and session.revoked_at is None:
+        session.revoked_at = _now()
+        _refresh_repo.update()
 
 
 def request_password_reset(actor_type: str, email: str, secret_key: str) -> str | None:
