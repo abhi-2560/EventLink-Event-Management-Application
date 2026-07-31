@@ -26,7 +26,7 @@ export default function EventGrid({ events, onClearFilters, isFiltered }) {
   }
 
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
       {events.map((event, index) => (
         <div
           key={event.event_id}

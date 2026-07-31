@@ -58,9 +58,13 @@ export default function EventCard({ event, featured = false }) {
         <h3 className="relative mt-3 line-clamp-2 font-display text-2xl text-black font-extrabold ">
           {event.title}
         </h3>
-        {event.description && (
+        {/* {event.description && (
           <p className="line-clamp-2 text-sm leading-relaxed text-muted">{event.description}</p>
-        )}
+        )} */}
+
+        <p className="line-clamp-2 min-h-[2.75rem] text-sm leading-relaxed text-muted">
+          {event.description || "\u00A0"}
+        </p>
 
         <div className="space-y-2 text-sm text-muted">
           <div className="flex items-center gap-2">

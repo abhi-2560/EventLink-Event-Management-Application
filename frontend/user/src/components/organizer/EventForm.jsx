@@ -60,7 +60,7 @@ export default function EventForm({
           <Input label="Start date & time" type="datetime-local" required {...register('start_datetime')} error={errors.start_datetime?.message} />
         </div>
       </section>
-
+      {/* 
       {!isEdit && (
         <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900">Multimedia</h3>
@@ -71,6 +71,74 @@ export default function EventForm({
             <FileField label="Videos" accept="video/mp4,video/webm" multiple onChange={(files) => setMedia((current) => ({ ...current, videos: [...files] }))} />
           </div>
           <p className="mt-3 text-xs text-muted">Images: JPEG, PNG, or WebP up to 5 MB. Videos: MP4 or WebM up to 50 MB.</p>
+        </section>
+      )} */}
+
+
+      {!isEdit && (
+        <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Multimedia</h3>
+              <p className="mt-1 text-sm text-muted">
+                Optional banner, gallery images, and videos.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-5 md:grid-cols-3">
+            <div className="rounded-xl border border-border p-4">
+              <FileField
+                label="Banner image"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(files) =>
+                  setMedia((current) => ({
+                    ...current,
+                    banner: files[0] || null,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="rounded-xl border border-border p-4">
+              <FileField
+                label="Gallery images"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onChange={(files) =>
+                  setMedia((current) => ({
+                    ...current,
+                    images: [...files],
+                  }))
+                }
+              />
+            </div>
+
+            <div className="rounded-xl border border-border p-4">
+              <FileField
+                label="Videos"
+                accept="video/mp4,video/webm"
+                multiple
+                onChange={(files) =>
+                  setMedia((current) => ({
+                    ...current,
+                    videos: [...files],
+                  }))
+                }
+              />
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-xl border border-dashed border-border bg-slate-50 p-4">
+            <p className="text-sm font-medium text-gray-900">
+              Upload Requirements
+            </p>
+            <p className="mt-1 text-sm text-muted">
+              Images: JPEG, PNG, or WebP up to <strong>5 MB</strong>.
+              <br />
+              Videos: MP4 or WebM up to <strong>50 MB</strong>.
+            </p>
+          </div>
         </section>
       )}
 
