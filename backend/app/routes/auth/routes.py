@@ -8,6 +8,67 @@ from app.utils.serializers import serialize_organizer
 auth_bp = Blueprint("auth", __name__)
 
 
+def _refresh_cookie_name(actor_type: str) -> str:
+    return f"refresh_token_{actor_type}"
+
+
+def _set_refresh_cookie(response, actor_type: str, token: str):
+    response.set_cookie(
+        _refresh_cookie_name(actor_type),
+        token,
+        max_age=current_app.config["JWT_REFRESH_TOKEN_EXPIRES_SECONDS"],
+        httponly=True,
+        secure=current_app.config["REFRESH_COOKIE_SECURE"],
+        samesite=current_app.config["REFRESH_COOKIE_SAMESITE"],
+        domain=current_app.config["REFRESH_COOKIE_DOMAIN"],
+        path="/auth",
+    )
+
+
+def _clear_refresh_cookie(response, actor_type: str):
+    response.delete_cookie(
+        _refresh_cookie_name(actor_type),
+        domain=current_app.config["REFRESH_COOKIE_DOMAIN"],
+        path="/auth",
+        samesite=current_app.config["REFRESH_COOKIE_SAMESITE"],
+    )
+
+
+def _token_response(actor, actor_type: str, refresh_token: str | None = None):
+    actor_id = getattr(actor, f"{actor_type}_id")
+    name = getattr(actor, "name", None) or getattr(actor, "organizer_name", None)
+    access_token = create_access_token(
+        identity=str(actor_id),
+        additional_claims={"actor_type": actor_type, "email": actor.email, "name": name},
+    )
+    if refresh_token is None:
+        refresh_token, _ = auth_service.issue_refresh_token(
+            actor_type,
+            actor_id,
+            user_agent=request.headers.get("User-Agent"),
+            ip_address=request.remote_addr,
+        )
+    response = jsonify(
+        {
+            "access_token": access_token,
+            "actor_type": actor_type,
+            "expires_in": current_app.config["JWT_ACCESS_TOKEN_EXPIRES"],
+        }
+    )
+    _set_refresh_cookie(response, actor_type, refresh_token)
+    return response
+
+
+def _verify_refresh_request(actor_type: str):
+    if request.headers.get("X-Refresh-Request") != "1":
+        raise ValidationError("Refresh request header is required")
+    origin = request.headers.get("Origin")
+    if origin and origin not in current_app.config["CORS_ORIGINS"]:
+        raise ValidationError("Refresh request origin is not allowed")
+    if actor_type not in ("admin", "organizer"):
+        raise ValidationError("actor_type must be 'admin' or 'organizer'")
+
+
 @auth_bp.route("/admin/login", methods=["POST"])
 def admin_login():
     data = request.get_json(silent=True) or {}
@@ -17,11 +78,7 @@ def admin_login():
         raise ValidationError("email and password are required")
 
     actor = auth_service.authenticate("admin", email, password, ip_address=request.remote_addr)
-    token = create_access_token(
-        identity=str(actor.admin_id),
-        additional_claims={"actor_type": "admin", "email": actor.email, "name": actor.name},
-    )
-    return jsonify({"access_token": token, "actor_type": "admin"}), 200
+    return _token_response(actor, "admin"), 200
 
 
 @auth_bp.route("/admin/logout", methods=["POST"])
@@ -36,7 +93,10 @@ def admin_logout():
         actor_email=claims.get("email"),
         ip_address=request.remote_addr,
     )
-    return jsonify({"message": "Logged out"}), 200
+    response = jsonify({"message": "Logged out"})
+    auth_service.revoke_refresh_token(request.cookies.get(_refresh_cookie_name("admin")))
+    _clear_refresh_cookie(response, "admin")
+    return response, 200
 
 
 @auth_bp.route("/admin/forgot-password", methods=["POST"])
@@ -71,11 +131,7 @@ def organizer_login():
     actor = auth_service.authenticate(
         "organizer", email, password, ip_address=request.remote_addr
     )
-    token = create_access_token(
-        identity=str(actor.organizer_id),
-        additional_claims={"actor_type": "organizer", "email": actor.email, "name": actor.organizer_name},
-    )
-    return jsonify({"access_token": token, "actor_type": "organizer"}), 200
+    return _token_response(actor, "organizer"), 200
 
 
 @auth_bp.route("/organizer/logout", methods=["POST"])
@@ -90,7 +146,10 @@ def organizer_logout():
         actor_email=claims.get("email"),
         ip_address=request.remote_addr,
     )
-    return jsonify({"message": "Logged out"}), 200
+    response = jsonify({"message": "Logged out"})
+    auth_service.revoke_refresh_token(request.cookies.get(_refresh_cookie_name("organizer")))
+    _clear_refresh_cookie(response, "organizer")
+    return response, 200
 
 
 @auth_bp.route("/organizer/forgot-password", methods=["POST"])
@@ -129,14 +188,7 @@ def login():
     actor = auth_service.authenticate(
         actor_type, email, password, ip_address=request.remote_addr
     )
-    actor_id = getattr(actor, f"{actor_type}_id")
-    name = getattr(actor, "name", None) or getattr(actor, "organizer_name", None)
-
-    token = create_access_token(
-        identity=str(actor_id),
-        additional_claims={"actor_type": actor_type, "email": actor.email, "name": name},
-    )
-    return jsonify({"access_token": token, "actor_type": actor_type}), 200
+    return _token_response(actor, actor_type), 200
 
 
 @auth_bp.route("/logout", methods=["POST"])
@@ -149,11 +201,31 @@ def logout():
         actor_email=claims.get("email"),
         ip_address=request.remote_addr,
     )
-    # Stateless JWTs aren't server-invalidated here - see note in
-    # auth_service.logout(). Add a token-blocklist (e.g. Redis-backed,
-    # via flask-jwt-extended's blocklist hook) if you need hard logout
-    # before token expiry.
-    return jsonify({"message": "Logged out"}), 200
+    actor_type = claims.get("actor_type")
+    auth_service.revoke_refresh_token(request.cookies.get(_refresh_cookie_name(actor_type)))
+    response = jsonify({"message": "Logged out"})
+    _clear_refresh_cookie(response, actor_type)
+    return response, 200
+
+
+@auth_bp.route("/refresh", methods=["POST"])
+def refresh():
+    actor_type = request.headers.get("X-Actor-Type")
+    _verify_refresh_request(actor_type)
+    raw_token = request.cookies.get(_refresh_cookie_name(actor_type))
+    new_raw_token, session = auth_service.rotate_refresh_token(
+        raw_token or "",
+        actor_type,
+        user_agent=request.headers.get("User-Agent"),
+        ip_address=request.remote_addr,
+    )
+    repo = auth_service._repo_for(actor_type)
+    actor = repo.get_by_id(session.actor_id)
+    if actor is None or actor.status != "ACTIVE":
+        auth_service.revoke_refresh_token(new_raw_token)
+        raise ValidationError("Account is not active")
+    response = _token_response(actor, actor_type, refresh_token=new_raw_token)
+    return response, 200
 
 
 @auth_bp.route("/register/organizer", methods=["POST"])

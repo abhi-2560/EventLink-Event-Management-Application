@@ -51,10 +51,18 @@ class Event(db.Model):
         onupdate=func.now(),
     )
     archived_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    banner_url = db.Column(Text, nullable=True)
+    banner_public_id = db.Column(String(255), nullable=True)
 
     organizer = db.relationship("Organizer", back_populates="events")
     category = db.relationship("Category", back_populates="events")
     registrations = db.relationship("Registration", back_populates="event", cascade="all, delete-orphan")
+    media = db.relationship(
+        "EventMedia",
+        back_populates="event",
+        cascade="all, delete-orphan",
+        order_by="EventMedia.display_order",
+    )
 
     __table_args__ = (
         CheckConstraint("event_type IN ('ONLINE','OFFLINE','HYBRID')", name="ck_event_type"),

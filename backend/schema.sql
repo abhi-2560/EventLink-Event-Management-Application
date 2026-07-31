@@ -65,6 +65,25 @@ CREATE TABLE coupon (
     CONSTRAINT ck_coupon_flat_discount CHECK (flat_discount >= 0)
 );
 
+CREATE TABLE refresh_token (
+    token_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    actor_type VARCHAR(20) NOT NULL,
+    actor_id UUID NOT NULL,
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
+    family_id UUID NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    revoked_at TIMESTAMPTZ,
+    replaced_by_token_id UUID,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    last_used_at TIMESTAMPTZ,
+    user_agent TEXT,
+    ip_address VARCHAR(64),
+    CONSTRAINT ck_refresh_token_actor_type CHECK (actor_type IN ('admin', 'organizer'))
+);
+
+CREATE INDEX idx_refresh_token_actor_active ON refresh_token (actor_type, actor_id, revoked_at);
+CREATE INDEX idx_refresh_token_expiry ON refresh_token (expires_at);
+
 CREATE TABLE organizer (
     organizer_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organizer_name VARCHAR(255) NOT NULL,
@@ -116,6 +135,8 @@ CREATE TABLE event (
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     archived_at TIMESTAMPTZ,
+    banner_url TEXT,
+    banner_public_id VARCHAR(255),
     CONSTRAINT ck_event_type CHECK (event_type IN ('ONLINE', 'OFFLINE', 'HYBRID')),
     CONSTRAINT ck_event_ticket_price_nonnegative CHECK (ticket_price >= 0),
     CONSTRAINT ck_event_is_free_ticket_price CHECK ((NOT is_free) OR ticket_price = 0),
@@ -134,6 +155,20 @@ CREATE TABLE event (
 CREATE INDEX idx_event_search ON event (city, category_name, event_type);
 CREATE INDEX idx_event_status ON event (status, registration_status);
 CREATE INDEX idx_event_keywords ON event USING gin (keywords);
+
+CREATE TABLE event_media (
+    media_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID NOT NULL REFERENCES event (event_id) ON DELETE CASCADE,
+    media_type VARCHAR(10) NOT NULL,
+    media_url TEXT NOT NULL,
+    public_id VARCHAR(255) NOT NULL,
+    display_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    CONSTRAINT ck_event_media_type CHECK (media_type IN ('IMAGE', 'VIDEO')),
+    CONSTRAINT ck_event_media_display_order CHECK (display_order >= 0)
+);
+
+CREATE INDEX idx_event_media_event_order ON event_media (event_id, display_order);
 
 CREATE TABLE registration (
     registration_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

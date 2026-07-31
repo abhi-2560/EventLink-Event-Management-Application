@@ -51,7 +51,7 @@ def serialize_category(category):
     }
 
 
-def serialize_event(event, include_internal=False, use_platform_fees=False):
+def serialize_event(event, include_internal=False, use_platform_fees=False, include_media=False):
     if use_platform_fees:
         from app.services import platform_settings_service
         fees = platform_settings_service.get_fees()
@@ -87,6 +87,7 @@ def serialize_event(event, include_internal=False, use_platform_fees=False):
         "start_datetime": _iso(event.start_datetime),
         "status": event.status,
         "registration_status": event.registration_status,
+        "banner_url": event.banner_url,
     }
     if include_internal:
         data.update({
@@ -98,6 +99,19 @@ def serialize_event(event, include_internal=False, use_platform_fees=False):
             "created_at": _iso(event.created_at),
             "archived_at": _iso(event.archived_at),
         })
+    if include_media:
+        media = [
+            {
+                "media_id": str(item.media_id),
+                "media_type": item.media_type,
+                "media_url": item.media_url,
+                "display_order": item.display_order,
+                "created_at": _iso(item.created_at),
+            }
+            for item in event.media
+        ]
+        data["images"] = [item for item in media if item["media_type"] == "IMAGE"]
+        data["videos"] = [item for item in media if item["media_type"] == "VIDEO"]
     return data
 
 

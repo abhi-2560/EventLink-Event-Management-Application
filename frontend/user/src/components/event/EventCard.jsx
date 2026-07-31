@@ -40,6 +40,13 @@ export default function EventCard({ event, featured = false }) {
       )}
     >
       <div className={cn('relative h-44 bg-gradient-to-br p-5', gradient)}>
+        {event.banner_url && (
+          <img
+            src={event.banner_url}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_50%)]" />
         <div className="relative flex items-start justify-between gap-2">
           <span className="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">

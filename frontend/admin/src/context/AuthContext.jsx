@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { clearAccessToken, setAccessToken } from '../api/authSession';
 
 const AuthContext = createContext(null);
 
@@ -6,12 +7,12 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('admin_token'));
 
   const login = useCallback((t) => {
-    localStorage.setItem('admin_token', t);
+    setAccessToken(t);
     setToken(t);
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('admin_token');
+    clearAccessToken();
     setToken(null);
   }, []);
 
