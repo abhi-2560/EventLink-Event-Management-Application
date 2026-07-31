@@ -29,22 +29,6 @@ export default function Hero({ searchValue, onSearchChange, onSearchSubmit }) {
               Browse conferences, workshops, concerts and more across India. Register in minutes — no account required.
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
-                <input
-                  type="search"
-                  value={searchValue}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  placeholder="Search events by name..."
-                  className="w-full rounded-xl border-0 bg-white py-3.5 pl-12 pr-4 text-gray-900 shadow-lg placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
-                />
-              </div>
-              <Button type="submit" size="lg" className="shrink-0 bg-accent-500 hover:bg-accent-400">
-                Search Events
-              </Button>
-            </form>
-
             <div className="mt-6 flex flex-wrap gap-3">
               <a href="#browse-events">
                 <Button type="button" variant="secondary" className="text-brand-100 hover:bg-white/10 hover:text-white hover:border-purple-600">

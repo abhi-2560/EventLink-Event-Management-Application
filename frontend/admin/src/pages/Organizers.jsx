@@ -19,6 +19,7 @@ export default function Organizers() {
   const { q: search, status, page, setParam } = useListSearchParams(LIST_PARAMS);
   const pageSize = 10;
 
+  // This is the single call, fetches all at once, so no debouncing needed
   const { data, isLoading, isError, error } = useQuery({ queryKey: ['admin-organizers'], queryFn: getOrganizers });
 
   const filtered = (data || []).filter((o) => {

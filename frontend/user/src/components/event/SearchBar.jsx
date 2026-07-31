@@ -4,6 +4,10 @@ import Button from '../common/Button';
 import Input from '../common/Input';
 import { CATEGORIES, EVENT_TYPES } from '../../utils/constants';
 
+import useDebounce from '../../hooks/useDebounce';
+
+
+
 const EMPTY_FILTERS = {
   title: '',
   city: '',
@@ -29,6 +33,9 @@ export default function SearchBar({ filters = EMPTY_FILTERS, onSearch, compact =
   const [localFilters, setLocalFilters] = useState(EMPTY_FILTERS);
   const [expanded, setExpanded] = useState(false);
 
+
+  const debouncedFilters = useDebounce(localFilters, 750);
+
   useEffect(() => {
     setLocalFilters({
       title: filters.title || '',
@@ -39,6 +46,10 @@ export default function SearchBar({ filters = EMPTY_FILTERS, onSearch, compact =
       organizer: filters.organizer || '',
     });
   }, [filters.title, filters.city, filters.category, filters.type, filters.date, filters.organizer]);
+
+  useEffect(() => {
+    onSearch(filtersToSearchParams(debouncedFilters));
+  }, [debouncedFilters, onSearch]);
 
   const handleChange = (field, value) => {
     setLocalFilters((prev) => ({ ...prev, [field]: value }));
