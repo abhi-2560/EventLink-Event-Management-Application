@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import EventForm from '../../components/organizer/EventForm';
+import EventMediaManager from '../../components/organizer/EventMediaManager';
 import Loader from '../../components/common/Loader';
 import { getEvent, updateEvent } from '../../api/organizerApi';
 import { eventToFormDefaults } from '../../schemas/organizerSchemas';
@@ -51,6 +52,13 @@ export default function EditEvent() {
         submitLabel="Update Event"
         isEdit
         minCapacity={Math.max(bookedSeats, 1)}
+      />
+      <EventMediaManager
+        event={event}
+        onChanged={async () => {
+          await queryClient.invalidateQueries({ queryKey: ['organizer-event', eventId] });
+          await queryClient.invalidateQueries({ queryKey: ['organizer-events'] });
+        }}
       />
     </div>
   );

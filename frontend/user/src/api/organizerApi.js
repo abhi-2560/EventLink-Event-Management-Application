@@ -42,6 +42,9 @@ export const uploadBanner = (eventId, file) => {
   }).then((r) => r.data);
 };
 
+export const deleteBanner = (eventId) =>
+  api.delete(`/organizer/events/${eventId}/banner`).then((r) => r.data);
+
 export const uploadEventMedia = (eventId, file, mediaType) => {
   const data = new FormData();
   data.append('file', file);

@@ -6,9 +6,11 @@ export default function EventInfo({ event }) {
 
   return (
     <div className="space-y-6">
-      {event.banner_url && (
-        <img src={event.banner_url} alt={`${event.title} banner`} className="h-64 w-full rounded-2xl object-cover" />
-      )}
+      <img
+        src={event.banner_url || '/event-placeholder.svg'}
+        alt={`${event.title} banner`}
+        className="h-64 w-full rounded-2xl object-cover"
+      />
       <div>
         <span className="inline-flex rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-700">
           {event.category_name}

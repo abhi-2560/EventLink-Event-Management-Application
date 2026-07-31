@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title">
+  <title>Event banner placeholder</title>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#0f766e"/>
+      <stop offset="1" stop-color="#164e63"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <circle cx="250" cy="170" r="120" fill="#fff" opacity=".12"/>
+  <circle cx="950" cy="520" r="190" fill="#fff" opacity=".08"/>
+  <path d="M480 245h240v185H480z" rx="18" fill="#fff" opacity=".2"/>
+  <path d="M530 295h140M530 340h100M530 385h70" stroke="#fff" stroke-width="22" stroke-linecap="round" opacity=".75"/>
+</svg>
