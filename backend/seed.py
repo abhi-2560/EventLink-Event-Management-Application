@@ -21,7 +21,7 @@ with app.app_context():
     existing = Admin.query.filter_by(email="admin@example.com").first()
 
     if existing:
-        print("Admin already exists.")
+        app.logger.info("seed_admin_exists")
     else:
         admin = Admin(
             name="Super Admin",
@@ -33,12 +33,12 @@ with app.app_context():
         )
         db.session.add(admin)
         db.session.commit()
-        print("Admin created successfully.")
+        app.logger.info("seed_admin_created")
 
     for name, description in DEFAULT_CATEGORIES:
         if not Category.query.filter_by(name=name).first():
             db.session.add(Category(name=name, description=description, is_default=True))
-            print(f"Category created: {name}")
+            app.logger.info("seed_category_created", extra={"category_name": name})
 
     db.session.commit()
 
@@ -57,5 +57,5 @@ with app.app_context():
         category.total_events = count_by_category.get(category.category_id, 0)
 
     db.session.commit()
-    print("Category event counts backfilled.")
-    print("Seed complete.")
+    app.logger.info("seed_category_counts_backfilled")
+    app.logger.info("seed_complete")

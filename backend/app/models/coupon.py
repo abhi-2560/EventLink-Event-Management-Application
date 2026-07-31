@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import String, Text, text
+from sqlalchemy import CheckConstraint, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
@@ -11,6 +11,13 @@ class Coupon(db.Model):
     """Discount coupons for event registrations."""
 
     __tablename__ = "coupon"
+    
+    __table_args__ = (
+        CheckConstraint(
+            "flat_discount >= 0",
+            name="ck_coupon_flat_discount"
+        ),
+    )
 
     coupon_id = db.Column(
         UUID(as_uuid=True),

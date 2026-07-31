@@ -17,6 +17,7 @@ import re
 
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
+from flask import current_app
 
 from app.repositories.admin_repository import AdminRepository
 from app.repositories.organizer_repository import OrganizerRepository
@@ -99,6 +100,10 @@ def authenticate(actor_type: str, email: str, password: str, ip_address: str | N
     repo = _repo_for(actor_type)
     actor = repo.get_by_email(email)
     if actor is None or not check_password_hash(actor.password_hash, password):
+        current_app.logger.warning(
+            "authentication_failed",
+            extra={"actor_type": actor_type, "email": email, "ip_address": ip_address},
+        )
         log_action(
             actor_type="SYSTEM",
             action="Failed Login",

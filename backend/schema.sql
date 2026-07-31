@@ -61,7 +61,8 @@ CREATE TABLE coupon (
     times_used INTEGER DEFAULT 0,
     total_discount_given NUMERIC(12, 2) DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    CONSTRAINT ck_coupon_flat_discount CHECK (flat_discount >= 0)
 );
 
 CREATE TABLE organizer (
