@@ -15,6 +15,8 @@ import { formatCurrency, paginate } from '../utils/helpers';
 import { showError, showSuccess } from '../utils/toast';
 import { useListSearchParams } from '../hooks/useListSearchParams';
 
+import useDebounce from '../hooks/useDebounce';
+
 const LIST_PARAMS = {
   q: { default: '' },
   page: { default: 1, type: 'number' },
@@ -33,6 +35,8 @@ function toPayload(data) {
 export default function Coupons() {
   const queryClient = useQueryClient();
   const { q: search, page, setParam } = useListSearchParams(LIST_PARAMS);
+const debouncedSearch = useDebounce(search, 500);
+
   const [modal, setModal] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const pageSize = 10;

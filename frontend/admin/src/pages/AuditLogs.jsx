@@ -1,12 +1,16 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, ScrollText } from 'lucide-react';
+
 import Loader from '../components/ui/Loader';
 import EmptyState from '../components/ui/EmptyState';
 import Pagination from '../components/ui/Pagination';
+
 import { getAuditLogs } from '../api/adminApi';
 import { formatDate } from '../utils/helpers';
 import { useListSearchParams } from '../hooks/useListSearchParams';
+import useDebounce from '../hooks/useDebounce';
 
 const LIST_PARAMS = {
   search: { default: '' },
@@ -16,17 +20,51 @@ const LIST_PARAMS = {
 };
 
 export default function AuditLogs() {
-  const { search, entity_type: entityType, actor_type: actorType, page, setParam } = useListSearchParams(LIST_PARAMS);
+  const {
+    search,
+    entity_type: entityType,
+    actor_type: actorType,
+    page,
+    setParam,
+  } = useListSearchParams(LIST_PARAMS);
+
+  // Local input state
+  const [searchInput, setSearchInput] = useState(search);
+
+  // Debounce local input
+  const debouncedSearch = useDebounce(searchInput, 500);
+
+  // Keep input synced with URL (back/forward navigation)
+  useEffect(() => {
+    setSearchInput(search);
+  }, [search]);
+
+  // Update URL only after debounce
+  useEffect(() => {
+    if (debouncedSearch !== search) {
+      setParam('search', debouncedSearch, {
+        resetKeys: ['page'],
+      });
+    }
+  }, [debouncedSearch, search, setParam]);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['admin-audit', search, entityType, actorType, page],
-    queryFn: () => getAuditLogs({
-      search: search || undefined,
-      entity_type: entityType || undefined,
-      actor_type: actorType || undefined,
+    queryKey: [
+      'admin-audit',
+      search,
+      entityType,
+      actorType,
       page,
-      page_size: 20,
-    }),
+    ],
+    queryFn: () =>
+      getAuditLogs({
+        search: search || undefined,
+        entity_type: entityType || undefined,
+        actor_type: actorType || undefined,
+        page,
+        page_size: 20,
+      }),
+    placeholderData: (prev) => prev,
   });
 
   return (
@@ -37,7 +75,15 @@ export default function AuditLogs() {
       <div className="grid gap-3 sm:grid-cols-4">
         <div className="relative sm:col-span-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <input value={search} onChange={(e) => setParam('search', e.target.value, { resetKeys: ['page'] })} placeholder="Search action, entity, actor..." className="w-full rounded-lg border border-border py-2 pl-10 pr-3 text-sm" />
+          {/* <input value={search} onChange={(e) => setParam('search', e.target.value, { resetKeys: ['page'] })} placeholder="Search action, entity, actor..." className="w-full rounded-lg border border-border py-2 pl-10 pr-3 text-sm" /> */}
+
+          <input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search action, entity, actor..."
+            className="w-full rounded-lg border border-border py-2 pl-10 pr-3 text-sm"
+          />
+
         </div>
         <select value={entityType} onChange={(e) => setParam('entity_type', e.target.value, { resetKeys: ['page'] })} className="rounded-lg border border-border px-3 py-2 text-sm">
           <option value="">All entities</option>

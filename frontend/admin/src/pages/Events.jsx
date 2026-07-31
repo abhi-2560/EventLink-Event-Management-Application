@@ -12,6 +12,8 @@ import { getEvents, archiveEvent } from '../api/adminApi';
 import { formatCurrency, formatDateShort, paginate } from '../utils/helpers';
 import { useListSearchParams } from '../hooks/useListSearchParams';
 
+import useDebounce from '../hooks/useDebounce';
+
 const LIST_PARAMS = {
   q: { default: '' },
   status: { default: '' },
@@ -20,6 +22,7 @@ const LIST_PARAMS = {
 
 export default function Events() {
   const { q: search, status, page, setParam } = useListSearchParams(LIST_PARAMS);
+  const debouncedSearch = useDebounce(search, 500);
   const [confirm, setConfirm] = useState(null);
   const queryClient = useQueryClient();
   const pageSize = 10;
@@ -31,14 +34,30 @@ export default function Events() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-events'] }); setConfirm(null); },
   });
 
+  // const filtered = (data || []).filter((e) => {
+  //   const q = search.toLowerCase();
+  //   const matchQ = !q || e.title?.toLowerCase().includes(q) || e.organizer_name?.toLowerCase().includes(q) || e.city?.toLowerCase().includes(q);
+  //   const matchS = !status || e.status === status;
+  //   return matchQ && matchS;
+  // });
+
   const filtered = (data || []).filter((e) => {
-    const q = search.toLowerCase();
-    const matchQ = !q || e.title?.toLowerCase().includes(q) || e.organizer_name?.toLowerCase().includes(q) || e.city?.toLowerCase().includes(q);
+    const q = debouncedSearch.toLowerCase();
+
+    const matchQ =
+      !q ||
+      e.title?.toLowerCase().includes(q) ||
+      e.organizer_name?.toLowerCase().includes(q) ||
+      e.city?.toLowerCase().includes(q);
+
     const matchS = !status || e.status === status;
+
     return matchQ && matchS;
   });
 
   const { items, page: safePage, totalPages, total } = paginate(filtered, page, pageSize);
+
+
 
   return (
     <div className="space-y-6">
