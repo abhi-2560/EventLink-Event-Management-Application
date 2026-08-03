@@ -15,13 +15,21 @@ def test_health_returns_database_readiness(client):
 
 
 @pytest.mark.unit
+# monkeypatch → Pytest utility for temporarily replacing code during a test
 def test_health_returns_503_when_database_is_unavailable(app, client, monkeypatch):
     from app.routes import health
 
     monkeypatch.setattr(
+        # Replace health.db.session.execute with (_ for _ in ()).throw(...) only during this test.
         health.db.session,
         "execute",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(OperationalError("SELECT 1", {}, Exception())),
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            OperationalError("SELECT 1", {}, Exception())
+        ),
+        # _ means, idc about this value
+        # This creates a generator expression.
+        # A generator is just an object that produces values one at a time, instead of creating them all at once.
+        # () is an empty tuple.
     )
 
     response = client.get("/health")

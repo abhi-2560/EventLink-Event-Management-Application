@@ -1,5 +1,6 @@
 import pytest
 
+# You never explicitly import conftest.py because pytest automatically discovers and loads it.
 
 @pytest.mark.integration
 def test_registration_payment_and_receipt_flow(client, published_event, coupon):
@@ -15,8 +16,6 @@ def test_registration_payment_and_receipt_flow(client, published_event, coupon):
         }
     )
     
-
-
     assert registration_response.status_code == 201
     registration = registration_response.get_json()
     assert registration["reservation_status"] == "RESERVED"

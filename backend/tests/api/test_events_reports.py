@@ -25,7 +25,7 @@ def test_organizer_can_publish_own_event(client, organizer_headers, category):
     assert publish_response.status_code == 200
     assert publish_response.get_json()["status"] == "PUBLISHED"
 
-
+# integration test
 @pytest.mark.integration
 def test_publish_validation_requires_offline_city(client, organizer_headers, category):
     create_response = client.post(

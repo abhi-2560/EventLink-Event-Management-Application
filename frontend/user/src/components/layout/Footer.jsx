@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 export default function Footer() {
   return (
-    <footer className="mt-auto border-t border-border bg-brand-950 text-brand-100">
+    <footer className="mt-auto border-t border-border bg-black text-brand-100 ">
       <Container className="py-12">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2">
@@ -14,7 +14,7 @@ export default function Footer() {
               </div>
               <span className="font-display text-2xl text-white">EventHub</span>
             </div>
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-brand-200">
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white">
               Discover and register for events across India — conferences, workshops, concerts, and local meetups.
             </p>
           </div>
@@ -34,7 +34,7 @@ export default function Footer() {
             </p>
           </div>
         </div>
-        <div className="mt-10 border-t border-brand-800 pt-6 text-center text-sm text-brand-300">
+        <div className="mt-10 border-t border-white pt-6 text-center text-sm text-white">
           © {new Date().getFullYear()} EventHub. All rights reserved.
         </div>
       </Container>

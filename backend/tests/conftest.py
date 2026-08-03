@@ -21,7 +21,12 @@ from app.models import Admin, Category, Coupon, Event, Organizer
 
 TABLES = "audit_log, payment, registration, event, coupon, category, organizer, admin"
 
+# @pytest.fixture
+# This function prepares some reusable data or object that tests can use.
+# without fixtures: rewrite the code again when required
 
+# Create this fixture only once for the entire test run, and reuse it for all tests.
+# without this, app() would get created 'n times for n cases'
 @pytest.fixture(scope="session")
 def app():
     if not os.getenv("TEST_DATABASE_URL"):
