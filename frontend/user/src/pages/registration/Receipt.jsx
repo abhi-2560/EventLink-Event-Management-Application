@@ -39,73 +39,97 @@ export default function Receipt() {
   const location = formatLocation(receipt);
   const joinLink = safeJoinLink(receipt.meeting_link);
 
+
+  const handlePrint = () => {
+    const originalTitle = document.title;
+
+    document.title = `Receipt-${receipt.receipt_number}`;
+
+    window.print();
+
+    document.title = originalTitle;
+  };
+
   return (
-    <Container className="py-10">
-      <Link to="/" className="mb-6 inline-flex items-center gap-2 text-sm text-muted hover:text-brand-600">
+    <div id="receipt">
+
+      <Container className="py-10 print:py-0">
+        {/* <Link to="/" className="mb-6 inline-flex items-center gap-2 text-sm text-muted hover:text-brand-600">
         <ArrowLeft className="h-4 w-4" /> Back to events
-      </Link>
+      </Link> */}
 
-      <div className="mx-auto max-w-2xl overflow-hidden rounded-2xl border border-border bg-white shadow-lg">
-        <div className="bg-gradient-to-r from-brand-700 to-brand-900 px-8 py-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-brand-200">Payment Receipt</p>
-              <h1 className="font-display text-3xl">{receipt.receipt_number}</h1>
+        <div className="mx-auto max-w-2xl overflow-hidden rounded-2xl border border-border bg-white shadow-lg">
+          <div className="bg-green-600 px-8 py-6 text-white print:bg-green-600 print:px-8 print:py-6 print:text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-l font-bold text-black print:text-black print:text-l print:font-bold">Payment Receipt</p>
+                <h1 className="font-display text-3xl print:font-display print:text-3xl">{receipt.receipt_number}</h1>
+              </div>
+              <Ticket className="h-10 w-10 text-black print:text-black" />
             </div>
-            <Ticket className="h-10 w-10 text-brand-200" />
           </div>
-        </div>
 
-        <div className="space-y-6 p-8">
-          <Section title="Event">
-            <p className="text-lg font-semibold text-gray-900">{receipt.event_title}</p>
-            {receipt.category_name && (
-              <p className="text-sm text-muted">{receipt.category_name}</p>
-            )}
-            {receipt.event_type === 'OFFLINE' && location && (
-              <Detail label="Location" value={location} />
-            )}
-            {receipt.event_type === 'ONLINE' && joinLink && (
-              <JoinLink href={joinLink} />
-            )}
-            {receipt.event_type === 'HYBRID' && (
-              <>
-                {location && <Detail label="Location" value={location} />}
-                {joinLink && <JoinLink href={joinLink} />}
-              </>
-            )}
-          </Section>
+          <div className="space-y-6 p-8">
+            <Section title="Event">
+              <p className="text-lg font-semibold text-gray-900">{receipt.event_title}</p>
+              {receipt.category_name && (
+                <p className="text-sm text-muted">{receipt.category_name}</p>
+              )}
+              {receipt.event_type === 'OFFLINE' && location && (
+                <Detail label="Location" value={location} />
+              )}
+              {receipt.event_type === 'ONLINE' && joinLink && (
+                <JoinLink href={joinLink} />
+              )}
+              {receipt.event_type === 'HYBRID' && (
+                <>
+                  {location && <Detail label="Location" value={location} />}
+                  {joinLink && <JoinLink href={joinLink} />}
+                </>
+              )}
+            </Section>
 
-          <Section title="Buyer">
-            <Detail label="Name" value={receipt.buyer_name} />
-            <Detail label="Phone" value={receipt.buyer_phone} />
-            {receipt.buyer_email && <Detail label="Email" value={receipt.buyer_email} />}
-          </Section>
+            <Section title="Buyer">
+              <Detail label="Name" value={receipt.buyer_name} />
+              <Detail label="Phone" value={receipt.buyer_phone} />
+              {receipt.buyer_email && <Detail label="Email" value={receipt.buyer_email} />}
+            </Section>
 
-          <Section title="Price breakdown">
-            <Detail label="Ticket price" value={formatCurrency(ticketSubtotal)} />
-            {discount > 0 && <Detail label="Discount" value={`-${formatCurrency(discount)}`} />}
-            {convenienceFee > 0 && <Detail label="Convenience fee" value={formatCurrency(convenienceFee)} />}
-            {gatewayFee > 0 && <Detail label="Gateway fee" value={formatCurrency(gatewayFee)} />}
-            <div className="mt-3 border-t border-border pt-3">
-              <Detail label="Total paid" value={formatCurrency(receipt.amount)} bold />
-            </div>
-          </Section>
+            <Section title="Price breakdown">
+              <Detail label="Ticket price" value={formatCurrency(ticketSubtotal)} />
+              {discount > 0 && <Detail label="Discount" value={`-${formatCurrency(discount)}`} />}
+              {convenienceFee > 0 && <Detail label="Convenience fee" value={formatCurrency(convenienceFee)} />}
+              {gatewayFee > 0 && <Detail label="Gateway fee" value={formatCurrency(gatewayFee)} />}
+              <div className="mt-3 border-t border-border pt-3">
+                <Detail label="Total paid" value={formatCurrency(receipt.amount)} bold />
+              </div>
+            </Section>
 
-          <Section title="Payment info">
-            <Detail label="Payment ID" value={receipt.payment_id} mono />
-            <Detail label="Order ID" value={receipt.order_id} mono />
-            <Detail label="Status" value={receipt.payment_status} />
-            <Detail label="Completed" value={formatDate(receipt.completed_at)} />
-          </Section>
+            <Section title="Payment info">
+              <Detail label="Payment ID" value={receipt.payment_id} mono />
+              <Detail label="Order ID" value={receipt.order_id} mono />
+              <Detail label="Status" value={receipt.payment_status} />
+              <Detail label="Completed" value={formatDate(receipt.completed_at)} />
+            </Section>
 
-          <Button variant="secondary" className="w-full" onClick={() => window.print()}>
+            {/* <Button variant="secondary" className="w-full" onClick={() => window.print()}>
             <Download className="h-4 w-4" />
             Print / Save Receipt
-          </Button>
+          </Button> */}
+            <div className="print:hidden">
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={handlePrint}
+              >
+                <Download className="h-4 w-4" />
+                Print / Save Receipt
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
-    </Container>
+      </Container>
+    </div>
   );
 }
 
