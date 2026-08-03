@@ -74,11 +74,15 @@ export function useDateRangeParams(defaultRange) {
   const range = useMemo(() => ({ start, end }), [start, end]);
 
   const setRange = useCallback((nextRange) => {
+    const resolvedRange = typeof nextRange === 'function'
+      ? nextRange(range)
+      : nextRange;
+
     updateParams({
-      start: nextRange.start,
-      end: nextRange.end,
+      start: resolvedRange.start,
+      end: resolvedRange.end,
     });
-  }, [updateParams]);
+  }, [range, updateParams]);
 
   return { range, setRange };
 }

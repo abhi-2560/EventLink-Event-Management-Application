@@ -54,7 +54,7 @@ api.interceptors.response.use(
         return Promise.reject(toApiError(error));
       }
     }
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    if (error.response?.status === 401) {
       clearAccessToken();
       if (window.location.pathname.startsWith('/organizer')
         && !window.location.pathname.includes('/login')

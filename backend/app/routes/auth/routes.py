@@ -21,7 +21,7 @@ def _set_refresh_cookie(response, actor_type: str, token: str):
         secure=current_app.config["REFRESH_COOKIE_SECURE"],
         samesite=current_app.config["REFRESH_COOKIE_SAMESITE"],
         domain=current_app.config["REFRESH_COOKIE_DOMAIN"],
-        path="/auth",
+        path=current_app.config["REFRESH_COOKIE_PATH"],
     )
 
 
@@ -29,7 +29,7 @@ def _clear_refresh_cookie(response, actor_type: str):
     response.delete_cookie(
         _refresh_cookie_name(actor_type),
         domain=current_app.config["REFRESH_COOKIE_DOMAIN"],
-        path="/auth",
+        path=current_app.config["REFRESH_COOKIE_PATH"],
         samesite=current_app.config["REFRESH_COOKIE_SAMESITE"],
     )
 

@@ -36,6 +36,8 @@ export default function Receipt() {
   const discount = Number(receipt.discount || 0);
   const convenienceFee = Number(receipt.convenience_fee || 0);
   const gatewayFee = Number(receipt.gateway_fee || 0);
+  const location = formatLocation(receipt);
+  const joinLink = safeJoinLink(receipt.meeting_link);
 
   return (
     <Container className="py-10">
@@ -59,6 +61,18 @@ export default function Receipt() {
             <p className="text-lg font-semibold text-gray-900">{receipt.event_title}</p>
             {receipt.category_name && (
               <p className="text-sm text-muted">{receipt.category_name}</p>
+            )}
+            {receipt.event_type === 'OFFLINE' && location && (
+              <Detail label="Location" value={location} />
+            )}
+            {receipt.event_type === 'ONLINE' && joinLink && (
+              <JoinLink href={joinLink} />
+            )}
+            {receipt.event_type === 'HYBRID' && (
+              <>
+                {location && <Detail label="Location" value={location} />}
+                {joinLink && <JoinLink href={joinLink} />}
+              </>
             )}
           </Section>
 
@@ -112,5 +126,31 @@ function Detail({ label, value, mono, bold }) {
         {value}
       </span>
     </div>
+  );
+}
+
+function formatLocation({ venue, city, state }) {
+  return [venue, city, state].filter(Boolean).join(', ');
+}
+
+function safeJoinLink(value) {
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function JoinLink({ href }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-block text-sm font-medium text-brand-600 hover:underline"
+    >
+      Join event
+    </a>
   );
 }

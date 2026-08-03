@@ -19,7 +19,7 @@ from app.config import TestConfig
 from app.extensions import db
 from app.models import Admin, Category, Coupon, Event, Organizer
 
-TABLES = "audit_log, payment, registration, event, coupon, category, organizer, admin"
+TABLES = "audit_log, refresh_token, payment, registration, event, coupon, category, organizer, admin"
 
 # @pytest.fixture
 # This function prepares some reusable data or object that tests can use.

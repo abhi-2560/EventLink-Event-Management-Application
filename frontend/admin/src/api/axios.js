@@ -49,7 +49,7 @@ api.interceptors.response.use(
         return Promise.reject(toApiError(err));
       }
     }
-    if ([401, 403].includes(err.response?.status)) {
+    if (err.response?.status === 401) {
       clearAccessToken();
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';

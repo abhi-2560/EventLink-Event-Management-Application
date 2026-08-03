@@ -6,8 +6,20 @@ import { showError, showSuccess } from '../../utils/toast';
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const VIDEO_TYPES = ['video/mp4', 'video/webm'];
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+const DEFAULT_MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const DEFAULT_MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+
+function positiveInteger(value, fallback) {
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+const MAX_IMAGE_BYTES = positiveInteger(import.meta.env.VITE_IMAGE_MAX_BYTES, DEFAULT_MAX_IMAGE_BYTES);
+const MAX_VIDEO_BYTES = positiveInteger(import.meta.env.VITE_VIDEO_MAX_BYTES, DEFAULT_MAX_VIDEO_BYTES);
+
+function formatMegabytes(bytes) {
+  return `${bytes / (1024 * 1024)} MB`;
+}
 
 function validateFiles(files, type) {
   const permitted = type === 'IMAGE' ? IMAGE_TYPES : VIDEO_TYPES;
@@ -24,7 +36,8 @@ export default function EventMediaManager({ event, onChanged }) {
   async function upload(files, type, isBanner = false) {
     const validFiles = validateFiles(files, type);
     if (!validFiles.length) {
-      showError(`Choose ${type === 'IMAGE' ? 'a JPEG, PNG, or WebP image up to 5 MB' : 'an MP4 or WebM video up to 50 MB'}.`);
+      const limit = type === 'IMAGE' ? formatMegabytes(MAX_IMAGE_BYTES) : formatMegabytes(MAX_VIDEO_BYTES);
+      showError(`Choose ${type === 'IMAGE' ? 'a JPEG, PNG, or WebP image' : 'an MP4 or WebM video'} up to ${limit}.`);
       return;
     }
     if (validFiles.length !== files.length) {

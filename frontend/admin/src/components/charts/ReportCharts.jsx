@@ -33,7 +33,7 @@ function pieTooltipFormatter(value, name, props) {
 function pieLegendFormatter(value, entry) {
   const count = entry?.payload?.event_count ?? 0;
   const pct = entry?.payload?.percentage ?? 0;
-  return `${value}`;
+  // return `${value}`;
 }
 
 export function MonthlyBarChart({ data, loading, error }) {
@@ -87,7 +87,7 @@ export function CategoryPieChart({ data, loading, error }) {
           {chartData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
         </Pie>
         <Tooltip formatter={pieTooltipFormatter} />
-        <Legend formatter={pieLegendFormatter} />
+        {/* <Legend formatter={pieLegendFormatter} /> */}
       </PieChart>
     </ResponsiveContainer>
   );

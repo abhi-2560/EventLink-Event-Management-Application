@@ -16,7 +16,7 @@ function RegistrationBadge({ status }) {
   return (
     <span
       className={cn(
-        'inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide',
+        'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide',
         isOpen ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600',
       )}
     >
@@ -47,7 +47,7 @@ export default function EventCard({ event, featured = false }) {
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_50%)]" />
         <div className="relative flex items-start justify-between gap-2">
-          <span className="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+          <span className="inline-flex rounded-full bg-black px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
             {event.category_name}
           </span>
           <RegistrationBadge status={event.registration_status} />

@@ -38,6 +38,23 @@ def _generate_receipt_number() -> str:
     return f"RCPT-{secrets.token_hex(6).upper()}"
 
 
+def _event_snapshot(event_id):
+    """Return event delivery details to freeze onto a new payment."""
+    from app.extensions import db
+    from app.models import Event
+
+    event = db.session.get(Event, event_id) if event_id else None
+    if event is None:
+        return {}
+    return {
+        "event_type": event.event_type,
+        "venue": event.venue,
+        "city": event.city,
+        "state": event.state,
+        "meeting_link": event.meeting_link,
+    }
+
+
 def create_order(registration_id):
     registration = booking_service.get_registration(registration_id)
     if registration.registration_status != "PENDING":
@@ -56,6 +73,7 @@ def create_order(registration_id):
             razorpay_order_id=order_id,
             event_id=registration.event_id,
             event_title=registration.event_title,
+            **_event_snapshot(registration.event_id),
             category_id=registration.category_id,
             category_name=registration.category_name,
             organizer_id=registration.organizer_id,
@@ -131,6 +149,7 @@ def handle_failure(registration_id, failure_reason: str | None = None):
             razorpay_order_id=order_id,
             event_id=registration.event_id,
             event_title=registration.event_title,
+            **_event_snapshot(registration.event_id),
             category_id=registration.category_id,
             category_name=registration.category_name,
             organizer_id=registration.organizer_id,
