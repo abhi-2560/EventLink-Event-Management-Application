@@ -1,12 +1,16 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, CalendarDays, PlusCircle, TrendingUp, User, LogOut, Menu, X,
+  UserRound,
+  Contact,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../context/AuthContext';
 import { logoutOrganizer } from '../../api/authApi';
 import { showSuccess } from '../../utils/toast';
+
+import { UserCog } from 'lucide-react';
 
 const links = [
   { to: '/organizer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -29,7 +33,7 @@ export default function OrganizerSidebar() {
   };
 
   const nav = (
-    <nav className="flex flex-col gap-1 p-4">
+    <nav className="flex flex-col gap-1 p-4 ">
       {links.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}
@@ -38,7 +42,7 @@ export default function OrganizerSidebar() {
           onClick={() => setOpen(false)}
           className={({ isActive }) => cn(
             'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
-            isActive ? 'bg-brand-600 text-white' : 'text-gray-600 hover:bg-brand-50 hover:text-brand-700',
+            isActive ? 'bg-[#6366f1] text-white' : 'text-slate-300 hover:bg-[#1e293b] hover:text-white',
           )}
         >
           <Icon className="h-4 w-4" />
@@ -48,7 +52,7 @@ export default function OrganizerSidebar() {
       <button
         type="button"
         onClick={handleLogout}
-        className="mt-4 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-danger"
+        className="mt-4 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-[#1e293b] hover:text-red-400"
       >
         <LogOut className="h-4 w-4" />
         Logout
@@ -67,11 +71,12 @@ export default function OrganizerSidebar() {
       </button>
 
       <aside className={cn(
-        'fixed inset-y-0 left-0 z-30 w-64 border-r border-border bg-white transition-transform lg:translate-x-0',
+        'fixed inset-y-0 left-0 z-30 w-64 border-r border-border transition-transform lg:translate-x-0 bg-[#0f172a]',
         open ? 'translate-x-0' : '-translate-x-full',
       )}>
-        <div className="flex h-16 items-center border-b border-border px-6">
-          <button onClick={()=>navigate('/')} className="font-display text-2xl text-brand-900">Organizer</button>
+        <div className="flex h-16 gap-2 items-center border-b border-border px-6">
+          <Contact className="text-[#6366f1] h-6 w-6" />
+          <button onClick={()=>navigate('/')} className="font-display text-2xl text-white">Organizer</button>
         </div>
         {nav}
       </aside>

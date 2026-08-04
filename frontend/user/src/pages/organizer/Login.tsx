@@ -28,7 +28,7 @@ export default function OrganizerLogin() {
   });
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-purple-200 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
         <div className="mb-6 flex items-center gap-3">
           <div className="rounded-xl bg-brand-600 p-3 text-white">
