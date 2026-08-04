@@ -11,8 +11,17 @@ export function createTestQueryClient() {
 
 export function renderWithProviders(
   ui: ReactElement,
-  { route = '/', queryClient = createTestQueryClient() }: { route?: string; queryClient?: QueryClient } = {},
+  {
+    route = '/',
+    queryClient = createTestQueryClient(),
+    token,
+  }: { route?: string; queryClient?: QueryClient; token?: string } = {},
 ) {
+  if (token !== undefined) {
+    if (token) localStorage.setItem('organizer_token', token);
+    else localStorage.removeItem('organizer_token');
+  }
+
   return {
     queryClient,
     ...render(

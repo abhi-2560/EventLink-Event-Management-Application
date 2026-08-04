@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import Receipt from './Receipt';
 import { renderWithProviders } from '../../test/test-utils';
 import { getReceipt } from '../../api/paymentApi';
@@ -9,6 +10,7 @@ jest.mock('../../api/paymentApi', () => ({
 }));
 
 jest.mock('../../utils/constants', () => ({
+  ...jest.requireActual('../../utils/constants'),
   formatCurrency: (value: string | number | null | undefined) => `₹${value ?? 0}`,
   formatDate: (value: string) => value,
 }));
@@ -79,4 +81,16 @@ test('renders venue and join link for hybrid events', async () => {
     'href',
     'https://meet.example.test/room',
   );
+});
+
+test('prints receipt with a receipt-specific document title', async () => {
+  const printSpy = jest.spyOn(window, 'print').mockImplementation(() => {
+    expect(document.title).toBe('Receipt-RCPT-PRINT');
+  });
+  renderReceipt({ receipt_number: 'RCPT-PRINT' });
+
+  await userEvent.click(await screen.findByRole('button', { name: /Print \/ Save Receipt/i }));
+
+  expect(printSpy).toHaveBeenCalledTimes(1);
+  printSpy.mockRestore();
 });
