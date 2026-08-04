@@ -19,7 +19,7 @@ from app.config import TestConfig
 from app.extensions import db
 from app.models import Admin, Category, Coupon, Event, Organizer
 
-TABLES = "audit_log, refresh_token, payment, registration, event, coupon, category, organizer, admin"
+TABLES = "audit_log, refresh_token, payment, registration, event_media, event, coupon, category, organizer, admin"
 
 # @pytest.fixture
 # This function prepares some reusable data or object that tests can use.
@@ -180,3 +180,25 @@ def admin_headers(client, admin):
 @pytest.fixture
 def organizer_headers(client, organizer):
     return login(client, "/auth/organizer/login", organizer.email, "Organizer@123")
+
+
+@pytest.fixture
+def other_organizer(app):
+    with app.app_context():
+        result = Organizer(
+            organizer_name="Other Organizer",
+            contact_person="Other Contact",
+            email="other-organizer@test.local",
+            phone="9876543211",
+            password_hash=generate_password_hash("Organizer@123"),
+            status="ACTIVE",
+        )
+        db.session.add(result)
+        db.session.commit()
+        db.session.refresh(result)
+        return result
+
+
+@pytest.fixture
+def other_organizer_headers(client, other_organizer):
+    return login(client, "/auth/organizer/login", other_organizer.email, "Organizer@123")
