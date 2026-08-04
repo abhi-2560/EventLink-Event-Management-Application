@@ -37,6 +37,8 @@ def app():
         db.create_all()
         # create_all() does not retrofit constraints onto an existing local
         # test database. Mirror the active Alembic invariant for reused DBs.
+        
+        # Postgres psql
         db.session.execute(
             text(
                 """

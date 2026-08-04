@@ -1,3 +1,5 @@
+# An application context is Flask's way of keeping track of which Flask application is currently active.
+
 import pytest
 
 from app.extensions import db
@@ -11,7 +13,10 @@ def test_admin_category_crud(client, app, admin_headers):
         headers=admin_headers,
         json={"name": "Workshop", "description": "Hands-on sessions"},
     )
+    
     assert create_response.status_code == 201
+    # “I expect the result to be 201. If it is not 5, this test should fail.”
+    
     category_id = create_response.get_json()["category_id"]
 
     list_response = client.get("/admin/categories", headers=admin_headers)

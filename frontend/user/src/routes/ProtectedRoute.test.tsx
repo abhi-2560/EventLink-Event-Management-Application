@@ -14,3 +14,14 @@ test('redirects guests to organizer login', () => {
 
   expect(screen.getByText('Organizer login')).toBeInTheDocument();
 });
+
+test('renders protected content for authenticated organizers', () => {
+  renderWithProviders(
+    <Routes>
+      <Route path="/organizer/dashboard" element={<ProtectedRoute><p>Dashboard</p></ProtectedRoute>} />
+    </Routes>,
+    { route: '/organizer/dashboard', token: 'organizer-token' },
+  );
+
+  expect(screen.getByText('Dashboard')).toBeInTheDocument();
+});

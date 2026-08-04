@@ -5,6 +5,7 @@ import pytest
 from app.extensions import db
 from app.models import Event, EventMedia
 
+# Monkeypatch: temporarily change behavior without changing the original source code.
 
 @pytest.fixture
 def mock_cloudinary_uploader(monkeypatch):
