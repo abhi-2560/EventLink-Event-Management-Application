@@ -54,9 +54,9 @@ export default function Sidebar() {
         {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
       <aside className={cn('fixed inset-y-0 left-0 z-30 w-60 bg-sidebar text-white transition-transform lg:translate-x-0', open ? 'translate-x-0' : '-translate-x-full')}>
-        <div className="flex h-16 items-center gap-2 border-b border-slate-700 px-5">
+        <div className="flex h-16 items-center gap-2 px-5">
           <Shield className="h-6 w-6 text-accent" />
-          <span onClick={()=>navigate('/')} className="font-semibold">EventHub Admin</span>
+          <span onClick={()=>navigate('/')} className="font-semibold text-2xl">Admin</span>
         </div>
         {nav}
       </aside>

@@ -31,4 +31,6 @@ markdowns
 
 seed.py
 
-coverage
+backend/coverage/
+frontend/user/coverage/
+frontend/admin/coverage/

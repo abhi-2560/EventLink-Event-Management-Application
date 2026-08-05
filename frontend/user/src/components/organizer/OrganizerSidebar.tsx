@@ -3,6 +3,7 @@ import {
   LayoutDashboard, CalendarDays, PlusCircle, TrendingUp, User, LogOut, Menu, X,
   UserRound,
   Contact,
+  Home,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../../utils/cn';
@@ -57,6 +58,7 @@ export default function OrganizerSidebar() {
         <LogOut className="h-4 w-4" />
         Logout
       </button>
+
     </nav>
   );
 
@@ -74,13 +76,29 @@ export default function OrganizerSidebar() {
         'fixed inset-y-0 left-0 z-30 w-64 border-r border-border transition-transform lg:translate-x-0 bg-[#0f172a]',
         open ? 'translate-x-0' : '-translate-x-full',
       )}>
-        <div className="flex h-16 gap-2 items-center border-b border-border px-6">
+        <div className="flex h-16 gap-2 items-center border-b px-6">
           <Contact className="text-[#6366f1] h-6 w-6" />
-          <button onClick={()=>navigate('/')} className="font-display text-2xl text-white">Organizer</button>
+          <button onClick={() => navigate('/organizer/dashboard')} className="font-semibold text-2xl text-white">Organizer</button>
         </div>
         {nav}
-      </aside>
-      {open && <button type="button" className="fixed inset-0 z-20 bg-black/30 lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu" />}
+
+        <div className="mt-auto border-t absolute bottom-0 p-4">
+          <button
+            onClick={()=>navigate('/')}
+            type="button"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-[#1e293b] hover:text-white"
+          >
+            <Home className="h-4 w-4" />
+            Home
+          </button>
+        </div>
+
+    </aside >
+      { open && <button type="button" className="fixed inset-0 z-20 bg-black/30 lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu" />
+}
+
+
+
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import Input, { Select, Textarea } from '../common/Input';
@@ -9,6 +9,9 @@ import { eventSchema, formToEventPayload } from '../../schemas/organizerSchemas'
 import type { EventFormValues } from '../../schemas/organizerSchemas';
 import type { DefaultValues, FieldError } from 'react-hook-form';
 import Loader from '../common/Loader';
+
+import { showSuccess } from '../../utils/toast';
+import { DeleteIcon } from 'lucide-react';
 
 interface EventMediaUpload {
   banner: File | null;
@@ -66,7 +69,7 @@ export default function EventForm({
           <div className="sm:col-span-2">
             <Textarea label="Description" {...register('description')} />
           </div>
-            <Select label="Category" required {...register('category_id')} error={errorMessage(errors.category_id)}>
+          <Select label="Category" required {...register('category_id')} error={errorMessage(errors.category_id)}>
             <option value="">Select category</option>
             {categories?.map((c) => (
               <option key={c.category_id} value={c.category_id}>{c.name}</option>
@@ -78,7 +81,7 @@ export default function EventForm({
             <option value="HYBRID">Hybrid</option>
           </Select>
           <Input label="Keywords (comma-separated)" {...register('keywords')} placeholder="conference, ai, workshop" />
-            <Input label="Start date & time" type="datetime-local" required {...register('start_datetime')} error={errorMessage(errors.start_datetime)} />
+          <Input label="Start date & time" type="datetime-local" required {...register('start_datetime')} error={errorMessage(errors.start_datetime)} />
         </div>
       </section>
       {/* 
@@ -109,7 +112,7 @@ export default function EventForm({
 
           <div className="mt-5 grid gap-5 md:grid-cols-3">
             <div className="rounded-xl border border-border p-4">
-              <FileField
+              {/* <FileField
                 label="Banner image"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(files) =>
@@ -118,20 +121,42 @@ export default function EventForm({
                     banner: files[0] || null,
                   }))
                 }
+              /> */}
+
+              <FileField
+                label="Banner image"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(files) => {
+                  setMedia((current) => ({
+                    ...current,
+                    banner: files[0] || null,
+                  }));
+
+                  if (files.length > 0) {
+                    showSuccess('Banner image selected');
+                  }
+                }}
               />
+
             </div>
+
+
 
             <div className="rounded-xl border border-border p-4">
               <FileField
                 label="Gallery images"
                 accept="image/jpeg,image/png,image/webp"
                 multiple
-                onChange={(files) =>
+                onChange={(files) => {
                   setMedia((current) => ({
                     ...current,
                     images: [...files],
-                  }))
-                }
+                  }));
+
+                  if (files.length > 0) {
+                    showSuccess(`${files.length} image${files.length > 1 ? 's' : ''} selected`);
+                  }
+                }}
               />
             </div>
 
@@ -140,12 +165,16 @@ export default function EventForm({
                 label="Videos"
                 accept="video/mp4,video/webm"
                 multiple
-                onChange={(files) =>
+                onChange={(files) => {
                   setMedia((current) => ({
                     ...current,
-                    videos: [...files],
-                  }))
-                }
+                    images: [...files],
+                  }));
+
+                  if (files.length > 0) {
+                    showSuccess(`${files.length} video${files.length > 1 ? 's' : ''} selected`);
+                  }
+                }}
               />
             </div>
           </div>
@@ -236,16 +265,81 @@ export default function EventForm({
   );
 }
 
-function FileField({ label, accept, multiple = false, onChange }: {
+// function FileField({ label, accept, multiple = false, onChange }: {
+//   label: string;
+//   accept: string;
+//   multiple?: boolean;
+//   onChange: (files: File[]) => void;
+// }) {
+//   return (
+//     <label className="block text-sm font-medium text-gray-700">
+//       {label}
+//       <input className="mt-1 block w-full text-sm text-muted" type="file" accept={accept} multiple={multiple} onChange={(event) => onChange(Array.from(event.target.files ?? []))} />
+//     </label>
+//   );
+// }
+
+import { useRef, useState } from 'react';
+import { Trash } from 'lucide-react';
+
+function FileField({
+  label,
+  accept,
+  multiple = false,
+  onChange,
+}: {
   label: string;
   accept: string;
   multiple?: boolean;
   onChange: (files: File[]) => void;
 }) {
+  const [selectedCount, setSelectedCount] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const clearSelection = () => {
+    setSelectedCount(0);
+    onChange([]); // clear parent state
+
+    if (inputRef.current) {
+      inputRef.current.value = ''; // clear the file input
+    }
+  };
+
   return (
     <label className="block text-sm font-medium text-gray-700">
       {label}
-      <input className="mt-1 block w-full text-sm text-muted" type="file" accept={accept} multiple={multiple} onChange={(event) => onChange(Array.from(event.target.files ?? []))} />
+
+      <label className="mt-2 inline-flex cursor-pointer items-center rounded-lg border border-border bg-slate-100 px-1 py-1 text-sm font-bold text-gray-800 hover:bg-slate-200">
+        Choose File
+        <input
+          ref={inputRef}
+          type="file"
+          accept={accept}
+          multiple={multiple}
+          className="hidden"
+          onChange={(event) => {
+            const files = Array.from(event.target.files ?? []);
+            setSelectedCount(files.length);
+            onChange(files);
+          }}
+        />
+      </label>
+
+      {selectedCount > 0 && (
+        <div className="mt-3 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={clearSelection}
+            className="rounded-full p-1 text-red-600 hover:bg-red-100"
+          >
+            <Trash className="h-4 w-4" />
+          </button>
+
+          <span className="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-sm font-bold text-indigo-700">
+            {selectedCount} {selectedCount === 1 ? 'file' : 'files'} selected
+          </span>
+        </div>
+      )}
     </label>
   );
 }
