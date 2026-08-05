@@ -19,6 +19,8 @@ from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
 def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
+        
+        # predefined funcs, checks http req for valid JWT (from AUTHORIZATION: BEARER<TOKEN> HEADER)
         verify_jwt_in_request()
         claims = get_jwt()
         if claims.get("actor_type") != "admin":
