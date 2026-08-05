@@ -10,3 +10,5 @@ def home():
 
 if __name__ == "__main__":
     app.run(debug=app.config.get("ENV") == "development")
+    
+# while running, python automatically sets __name__->__main__, so condn becomes true 
