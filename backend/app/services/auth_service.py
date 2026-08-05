@@ -13,7 +13,7 @@ Flask-free and independently testable.
 
 from __future__ import annotations
 
-import re
+import re #regexp
 import hashlib
 import secrets
 import uuid
@@ -53,6 +53,7 @@ def _validate_password(password: str) -> None:
         raise ValidationError("password must include a number")
 
 
+# returns repo for specified type
 def _repo_for(actor_type: str):
     repo = _REPOS.get(actor_type)
     if repo is None:
@@ -156,6 +157,8 @@ def _hash_refresh_token(raw_token: str) -> str:
     return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
 
 
+# The * in a Python function signature means everything after * must be passed as keyword arguments.
+
 def issue_refresh_token(actor_type: str, actor_id, *, user_agent=None, ip_address=None, family_id=None):
     """Create an opaque refresh token and persist only its SHA-256 hash."""
     raw_token = secrets.token_urlsafe(48)
@@ -174,15 +177,19 @@ def issue_refresh_token(actor_type: str, actor_id, *, user_agent=None, ip_addres
 
 def rotate_refresh_token(raw_token: str, actor_type: str, *, user_agent=None, ip_address=None):
     """Rotate one active token; replay revokes its whole token family."""
+    
     session = _refresh_repo.get_by_hash(_hash_refresh_token(raw_token))
     now = _now()
+    
     if session is None or session.actor_type != actor_type:
         raise ValidationError("Refresh token is invalid or expired")
+    
     if session.revoked_at is not None:
         for family_session in _refresh_repo.get_family(session.family_id):
             family_session.revoked_at = family_session.revoked_at or now
         _refresh_repo.update()
         raise ValidationError("Refresh token has already been used")
+    
     if session.expires_at <= now:
         session.revoked_at = now
         _refresh_repo.update()

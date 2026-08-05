@@ -1,8 +1,5 @@
 # Event Management Platform — Project Architecture Guide
 
-> **Audience:** Developers onboarding to, maintaining, or interviewing about this codebase.  
-> **Scope:** Full-stack implementation details for `E:\event_mgmt_v0` — not generic textbook explanations.
-
 ---
 
 ## Table of Contents

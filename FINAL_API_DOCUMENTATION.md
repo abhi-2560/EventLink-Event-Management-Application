@@ -25,8 +25,6 @@
 
 | Property | Value |
 |----------|-------|
-| **API version** | `0.1.0` (metadata only; exposed in `GET /health` as `version`) |
-| **URL versioning** | None (no `/v1` prefix) |
 | **Flask base URL (dev)** | `http://localhost:5000` |
 | **Frontend proxy prefix** | `/api` (Vite strips `/api` before forwarding to Flask) |
 | **Effective browser base URL** | `http://localhost:5173/api` (user), `http://localhost:5174/api` (admin) |

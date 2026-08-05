@@ -1,0 +1,3849 @@
+openapi: 3.1.0
+info:
+  title: Event Management Platform API
+  version: 0.1.0
+  description: REST API for the Event Management Platform. Registrants are anonymous;
+    organizers and admins authenticate with JWT Bearer tokens. Refresh tokens are
+    issued as HttpOnly cookies on login.
+servers:
+- url: http://localhost:5000
+  description: Local Flask server
+- url: /api
+  description: Vite dev proxy prefix (stripped before Flask)
+tags:
+- name: Root
+  description: API root
+- name: Health
+  description: Health and readiness
+- name: Auth
+  description: Authentication and password reset
+- name: Public
+  description: Public endpoints (no auth)
+- name: Organizer
+  description: Organizer-authenticated endpoints
+- name: Admin
+  description: Admin-authenticated endpoints
+paths:
+  /:
+    get:
+      operationId: getRoot
+      summary: API root
+      tags:
+      - Root
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+  /health:
+    get:
+      operationId: getHealth
+      summary: Health check
+      tags:
+      - Health
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthOk'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthUnavailable'
+      security: []
+  /auth/login:
+    post:
+      operationId: authLogin
+      summary: Unified login
+      tags: &id001
+      - Auth
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400': &id002
+          description: HTTP 400
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401': &id003
+          description: HTTP 401
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtErrorResponse'
+        '422': &id004
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500': &id005
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: Sets HttpOnly refresh token cookie (`refresh_token_admin` or `refresh_token_organizer`).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnifiedLoginBody'
+  /auth/admin/login:
+    post:
+      operationId: authAdminLogin
+      summary: Admin login
+      tags: *id001
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400': *id002
+        '401': *id003
+        '422': *id004
+        '500': *id005
+      description: Sets HttpOnly refresh token cookie (`refresh_token_admin` or `refresh_token_organizer`).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginBody'
+  /auth/organizer/login:
+    post:
+      operationId: authOrganizerLogin
+      summary: Organizer login
+      tags: *id001
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400': *id002
+        '401': *id003
+        '422': *id004
+        '500': *id005
+      description: Sets HttpOnly refresh token cookie (`refresh_token_admin` or `refresh_token_organizer`).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginBody'
+  /auth/logout:
+    post:
+      operationId: authLogout
+      summary: Unified logout
+      tags: *id001
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400': *id002
+        '401': *id003
+        '422': *id004
+        '500': *id005
+      description: Revokes refresh token cookie.
+      security:
+      - BearerAuth: []
+  /auth/admin/logout:
+    post:
+      operationId: authAdminLogout
+      summary: Admin logout
+      tags: *id001
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400': *id002
+        '401': *id003
+        '422': *id004
+        '500': *id005
+      description: Revokes refresh token cookie.
+      security:
+      - BearerAuth: []
+  /auth/organizer/logout:
+    post:
+      operationId: authOrganizerLogout
+      summary: Organizer logout
+      tags: *id001
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400': *id002
+        '401': *id003
+        '422': *id004
+        '500': *id005
+      description: Revokes refresh token cookie.
+      security:
+      - BearerAuth: []
+  /auth/refresh:
+    post:
+      operationId: authRefresh
+      summary: Refresh access token
+      tags: *id001
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400': *id002
+        '401': *id003
+        '422': *id004
+        '500': *id005
+      description: Requires HttpOnly `refresh_token_{actor_type}` cookie. Rotates
+        refresh token.
+      security: []
+      parameters:
+      - name: X-Actor-Type
+        in: header
+        required: true
+        schema:
+          type: string
+          enum:
+          - admin
+          - organizer
+      - name: X-Refresh-Request
+        in: header
+        required: true
+        schema:
+          type: string
+          enum:
+          - '1'
+  /auth/admin/forgot-password:
+    post:
+      operationId: authAdminForgotPassword
+      summary: Admin forgot password
+      tags:
+      - Auth
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              properties:
+                email:
+                  type: string
+                  format: email
+  /auth/organizer/forgot-password:
+    post:
+      operationId: authOrganizerForgotPassword
+      summary: Organizer forgot password
+      tags:
+      - Auth
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              properties:
+                email:
+                  type: string
+                  format: email
+  /auth/admin/reset-password:
+    post:
+      operationId: authAdminResetPassword
+      summary: Admin reset password
+      tags:
+      - Auth
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+  /auth/organizer/reset-password:
+    post:
+      operationId: authOrganizerResetPassword
+      summary: Organizer reset password
+      tags:
+      - Auth
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+  /auth/password-reset/request:
+    post:
+      operationId: authPasswordResetRequest
+      summary: Unified password reset request
+      tags: *id001
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+  /auth/password-reset/confirm:
+    post:
+      operationId: authPasswordResetConfirm
+      summary: Unified password reset confirm
+      tags: *id001
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+  /auth/register/organizer:
+    post:
+      operationId: authRegisterOrganizer
+      summary: Register organizer (auth)
+      tags: *id001
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organizer'
+        '409':
+          description: HTTP 409
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterOrganizerBody'
+  /events:
+    get:
+      operationId: listPublicEvents
+      summary: List published events
+      tags: &id006
+      - Public
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        '404': &id007
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409': &id008
+          description: HTTP 409
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422': &id009
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500': &id010
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+  /events/search:
+    get:
+      operationId: searchPublicEvents
+      summary: Search published events
+      tags: *id006
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        '404': *id007
+        '409': *id008
+        '422': *id009
+        '500': *id010
+      security: []
+      parameters:
+      - name: title
+        in: query
+        required: false
+        description: Title filter
+        schema:
+          type: string
+      - name: city
+        in: query
+        required: false
+        description: City filter
+        schema:
+          type: string
+      - name: location
+        in: query
+        required: false
+        description: Alias for city
+        schema:
+          type: string
+      - name: category_id
+        in: query
+        required: false
+        description: Category UUID
+        schema:
+          type: string
+          format: uuid
+      - name: category
+        in: query
+        required: false
+        description: Category name
+        schema:
+          type: string
+      - name: type
+        in: query
+        required: false
+        description: Event type
+        schema:
+          type: string
+          enum:
+          - ONLINE
+          - OFFLINE
+          - HYBRID
+      - name: organizer
+        in: query
+        required: false
+        description: Organizer name
+        schema:
+          type: string
+      - name: keyword
+        in: query
+        required: false
+        description: Keyword match
+        schema:
+          type: string
+      - name: date
+        in: query
+        required: false
+        description: Single-day filter
+        schema:
+          type: string
+          format: date-time
+      - name: date_from
+        in: query
+        required: false
+        description: Range start
+        schema:
+          type: string
+          format: date-time
+      - name: date_to
+        in: query
+        required: false
+        description: Range end
+        schema:
+          type: string
+          format: date-time
+  /events/{event_id}:
+    get:
+      operationId: getPublicEvent
+      summary: Get published event
+      tags: *id006
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventWithMedia'
+        '404': *id007
+        '409': *id008
+        '422': *id009
+        '500': *id010
+      security: []
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+  /organizers/register:
+    post:
+      operationId: publicRegisterOrganizer
+      summary: Register organizer (public)
+      tags: *id006
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organizer'
+        '409':
+          description: HTTP 409
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterOrganizerBody'
+  /coupons/validate:
+    post:
+      operationId: validateCoupon
+      summary: Validate coupon
+      tags: *id006
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponValidateResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - coupon_code
+              - event_id
+              properties:
+                coupon_code:
+                  type: string
+                event_id:
+                  type: string
+                  format: uuid
+                seat_count:
+                  type: integer
+                  minimum: 1
+                  default: 1
+  /registrations:
+    post:
+      operationId: createRegistration
+      summary: Create registration
+      tags: *id006
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationCreated'
+        '404': *id007
+        '409': *id008
+        '422': *id009
+        '500': *id010
+      description: Reserves seats for 15 minutes and creates a payment order.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationCreate'
+  /registrations/{registration_id}:
+    get:
+      operationId: getRegistration
+      summary: Get registration
+      tags: *id006
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+        '404': *id007
+        '409': *id008
+        '422': *id009
+        '500': *id010
+      security: []
+      parameters:
+      - name: registration_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Registration UUID
+  /payments/create-order:
+    post:
+      operationId: createPaymentOrder
+      summary: Create payment order
+      tags: *id006
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentOrder'
+        '409':
+          description: HTTP 409
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - registration_id
+              properties:
+                registration_id:
+                  type: string
+                  format: uuid
+  /payments/verify:
+    post:
+      operationId: verifyPayment
+      summary: Verify payment (simulated)
+      tags: *id006
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '404':
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: HTTP 409
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - registration_id
+              - order_id
+              properties:
+                registration_id:
+                  type: string
+                  format: uuid
+                order_id:
+                  type: string
+  /payments/failure:
+    post:
+      operationId: paymentFailure
+      summary: Report payment failure
+      tags: *id006
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - registration_id
+              properties:
+                registration_id:
+                  type: string
+                  format: uuid
+                failure_reason:
+                  type: string
+  /payments/{payment_id}/receipt:
+    get:
+      operationId: getPaymentReceipt
+      summary: Get payment receipt
+      tags: *id006
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '404':
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: []
+      parameters:
+      - name: payment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Payment UUID
+  /organizer/events:
+    get:
+      operationId: listOrganizerEvents
+      summary: List own events
+      tags: &id011
+      - Organizer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventInternal'
+        '401': &id012
+          description: HTTP 401
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtErrorResponse'
+        '403': &id013
+          description: HTTP 403
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404': &id014
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409': &id015
+          description: HTTP 409
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422': &id016
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500': &id017
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503': &id018
+          description: HTTP 503
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: &id019
+      - BearerAuth: []
+    post:
+      operationId: createOrganizerEvent
+      summary: Create event
+      tags: *id011
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInternal'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventCreate'
+  /organizer/events/browse:
+    get:
+      operationId: browseOrganizerEvents
+      summary: Browse all events
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+  /organizer/events/{event_id}:
+    get:
+      operationId: getOrganizerEvent
+      summary: Get own event
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventWithMedia'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+    put:
+      operationId: updateOrganizerEvent
+      summary: Update own event
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInternal'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventUpdate'
+  /organizer/events/{event_id}/capacity:
+    put:
+      operationId: updateOrganizerEventCapacity
+      summary: Update event capacity
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInternal'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - capacity
+              properties:
+                capacity:
+                  type: integer
+                  minimum: 1
+  /organizer/events/{event_id}/publish:
+    post:
+      operationId: publishOrganizerEventPost
+      summary: Publish event
+      tags:
+      - Organizer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInternal'
+        '401':
+          description: HTTP 401
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtErrorResponse'
+        '403':
+          description: HTTP 403
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: HTTP 409
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: HTTP 503
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+    patch:
+      operationId: publishOrganizerEventPatch
+      summary: Publish event
+      tags:
+      - Organizer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInternal'
+        '401':
+          description: HTTP 401
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtErrorResponse'
+        '403':
+          description: HTTP 403
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: HTTP 409
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: HTTP 503
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+  /organizer/events/{event_id}/close-registration:
+    post:
+      operationId: closeOrganizerEventRegistration
+      summary: Close event registration
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInternal'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+  /organizer/events/{event_id}/archive:
+    post:
+      operationId: archiveOrganizerEvent
+      summary: Archive own event
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInternal'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+  /organizer/events/{event_id}/banner:
+    post:
+      operationId: uploadOrganizerEventBanner
+      summary: Upload event banner
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventWithMedia'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      description: Accepts image/jpeg, image/png, image/webp (max 5 MB).
+      security: *id019
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+              - file
+    delete:
+      operationId: deleteOrganizerEventBanner
+      summary: Delete event banner
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventWithMedia'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+  /organizer/events/{event_id}/media:
+    post:
+      operationId: uploadOrganizerEventMedia
+      summary: Upload event media
+      tags: *id011
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaUpload'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                media_type:
+                  type: string
+                  enum:
+                  - IMAGE
+                  - VIDEO
+              required:
+              - file
+              - media_type
+  /organizer/events/{event_id}/media/{media_id}:
+    delete:
+      operationId: deleteOrganizerEventMedia
+      summary: Delete event media
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+      - name: media_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Media UUID
+  /organizer/events/{event_id}/registrations:
+    get:
+      operationId: listOrganizerEventRegistrations
+      summary: List event registrations
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Registration'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+  /organizer/events/{event_id}/registrations/{registration_id}:
+    get:
+      operationId: getOrganizerEventRegistration
+      summary: Get registration detail
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+      - name: registration_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Registration UUID
+  /organizer/events/{event_id}/sales:
+    get:
+      operationId: getOrganizerEventSales
+      summary: Get event sales
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventSales'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+  /organizer/sales:
+    get:
+      operationId: getOrganizerTotalSales
+      summary: Get total sales
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_sales:
+                    type: string
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+  /organizer/sales/summary:
+    get:
+      operationId: getOrganizerSalesSummary
+      summary: Get sales summary
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesSummary'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+  /organizer/dashboard:
+    get:
+      operationId: getOrganizerDashboard
+      summary: Organizer dashboard
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizerDashboard'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+  /organizer/reports/period:
+    get:
+      operationId: getOrganizerPeriodReport
+      summary: Organizer period report
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizerPeriodSummary'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters: &id020
+      - &id029
+        name: start_date
+        in: query
+        required: false
+        description: ISO-8601 start (Z supported)
+        schema:
+          type: string
+          format: date-time
+      - &id030
+        name: end_date
+        in: query
+        required: false
+        description: ISO-8601 end (Z supported)
+        schema:
+          type: string
+          format: date-time
+  /organizer/reports/monthly:
+    get:
+      operationId: getOrganizerMonthlyReport
+      summary: Organizer monthly report
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrganizerMonthlyItem'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters: *id020
+  /organizer/reports/category:
+    get:
+      operationId: getOrganizerCategoryReport
+      summary: Organizer category report
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryBreakdownItem'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      parameters: *id020
+  /organizer/profile:
+    get:
+      operationId: getOrganizerProfile
+      summary: Get organizer profile
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organizer'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+    put:
+      operationId: updateOrganizerProfile
+      summary: Update organizer profile
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organizer'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                organizer_name:
+                  type: string
+                contact_person:
+                  type: string
+                phone:
+                  type: string
+  /organizer/profile/change-password:
+    post:
+      operationId: changeOrganizerPassword
+      summary: Change organizer password
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordBody'
+  /organizer/categories:
+    get:
+      operationId: listOrganizerCategories
+      summary: List categories
+      tags: *id011
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '401': *id012
+        '403': *id013
+        '404': *id014
+        '409': *id015
+        '422': *id016
+        '500': *id017
+        '503': *id018
+      security: *id019
+  /admin/organizers:
+    get:
+      operationId: listAdminOrganizers
+      summary: List organizers
+      tags: &id021
+      - Admin
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organizer'
+        '401': &id022
+          description: HTTP 401
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtErrorResponse'
+        '403': &id023
+          description: HTTP 403
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404': &id024
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409': &id025
+          description: HTTP 409
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422': &id026
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500': &id027
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security: &id028
+      - BearerAuth: []
+  /admin/organizers/{organizer_id}:
+    get:
+      operationId: getAdminOrganizer
+      summary: Get organizer
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organizer'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - name: organizer_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Organizer UUID
+    put:
+      operationId: updateAdminOrganizer
+      summary: Update organizer
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organizer'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - name: organizer_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Organizer UUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                organizer_name:
+                  type: string
+                contact_person:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+    delete:
+      operationId: deleteAdminOrganizer
+      summary: Delete organizer
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - name: organizer_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Organizer UUID
+  /admin/organizers/{organizer_id}/archive:
+    post:
+      operationId: archiveAdminOrganizerPost
+      summary: Archive organizer
+      tags:
+      - Admin
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organizer'
+        '401':
+          description: HTTP 401
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtErrorResponse'
+        '403':
+          description: HTTP 403
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: HTTP 409
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: organizer_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Organizer UUID
+    patch:
+      operationId: archiveAdminOrganizerPatch
+      summary: Archive organizer
+      tags:
+      - Admin
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organizer'
+        '401':
+          description: HTTP 401
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtErrorResponse'
+        '403':
+          description: HTTP 403
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: HTTP 409
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: organizer_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Organizer UUID
+  /admin/categories:
+    get:
+      operationId: listAdminCategories
+      summary: List categories
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+    post:
+      operationId: createAdminCategory
+      summary: Create category
+      tags: *id021
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                is_default:
+                  type: boolean
+                  default: false
+  /admin/categories/{category_id}:
+    put:
+      operationId: updateAdminCategory
+      summary: Update category
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Category UUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                is_default:
+                  type: boolean
+    delete:
+      operationId: deleteAdminCategory
+      summary: Delete category
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Category UUID
+  /admin/categories/{category_id}/archive:
+    patch:
+      operationId: archiveAdminCategory
+      summary: Archive category
+      tags: *id021
+      responses:
+        '200':
+          description: Category archived or category object returned
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/Category'
+                - $ref: '#/components/schemas/MessageResponse'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Category UUID
+  /admin/coupons:
+    get:
+      operationId: listAdminCoupons
+      summary: List coupons
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Coupon'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+    post:
+      operationId: createAdminCoupon
+      summary: Create coupon
+      tags: *id021
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coupon'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - code
+              - flat_discount
+              properties:
+                code:
+                  type: string
+                  maxLength: 100
+                flat_discount:
+                  type: number
+                  exclusiveMinimum: 0
+                description:
+                  type: string
+                expiry_date:
+                  type: string
+                  format: date-time
+                is_active:
+                  type: boolean
+                  default: true
+  /admin/coupons/{coupon_id}:
+    get:
+      operationId: getAdminCoupon
+      summary: Get coupon
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coupon'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - name: coupon_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Coupon UUID
+    put:
+      operationId: updateAdminCoupon
+      summary: Update coupon
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coupon'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - name: coupon_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Coupon UUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                flat_discount:
+                  type: number
+                description:
+                  type: string
+                expiry_date:
+                  type: string
+                  format: date-time
+                is_active:
+                  type: boolean
+    delete:
+      operationId: deactivateAdminCoupon
+      summary: Deactivate coupon
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      description: Soft delete — sets is_active to false.
+      security: *id028
+      parameters:
+      - name: coupon_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Coupon UUID
+  /admin/events:
+    get:
+      operationId: listAdminEvents
+      summary: List events
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventInternal'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+  /admin/events/{event_id}:
+    get:
+      operationId: getAdminEvent
+      summary: Get event
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInternal'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+    put:
+      operationId: updateAdminEvent
+      summary: Update event
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInternal'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventUpdate'
+    delete:
+      operationId: deleteAdminEvent
+      summary: Delete event
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+  /admin/events/{event_id}/archive:
+    post:
+      operationId: archiveAdminEventPost
+      summary: Archive event
+      tags:
+      - Admin
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInternal'
+        '401':
+          description: HTTP 401
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtErrorResponse'
+        '403':
+          description: HTTP 403
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: HTTP 409
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+    patch:
+      operationId: archiveAdminEventPatch
+      summary: Archive event
+      tags:
+      - Admin
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInternal'
+        '401':
+          description: HTTP 401
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtErrorResponse'
+        '403':
+          description: HTTP 403
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: HTTP 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: HTTP 409
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: HTTP 422
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: HTTP 500
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Event UUID
+  /admin/profile:
+    get:
+      operationId: getAdminProfile
+      summary: Get admin profile
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Admin'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+    put:
+      operationId: updateAdminProfile
+      summary: Update admin profile
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Admin'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+  /admin/profile/change-password:
+    post:
+      operationId: changeAdminPassword
+      summary: Change admin password
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordBody'
+  /admin/settings/platform-fees:
+    get:
+      operationId: getPlatformFees
+      summary: Get platform fees
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformFees'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+    put:
+      operationId: updatePlatformFees
+      summary: Update platform fees
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformFees'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - convenience_fee
+              - gateway_fee
+              properties:
+                convenience_fee:
+                  type: number
+                  minimum: 0
+                gateway_fee:
+                  type: number
+                  minimum: 0
+  /admin/reports/summary:
+    get:
+      operationId: getAdminReportsSummary
+      summary: Admin dashboard summary
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminDashboard'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+  /admin/reports/dashboard:
+    get:
+      operationId: getAdminReportsDashboard
+      summary: Admin dashboard (alias)
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminDashboard'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+  /admin/reports/period:
+    get:
+      operationId: getAdminReportsPeriod
+      summary: Admin period summary
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeriodSummary'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters: *id020
+  /admin/reports/monthly:
+    get:
+      operationId: getAdminReportsMonthly
+      summary: Admin monthly bar chart
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MonthlyBarItem'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - *id029
+      - *id030
+      - name: months
+        in: query
+        required: false
+        description: Months window when no date range
+        schema:
+          type: integer
+          default: 6
+  /admin/reports/category:
+    get:
+      operationId: getAdminReportsCategory
+      summary: Admin category breakdown
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryBreakdownItem'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters: *id020
+  /admin/reports/category-breakdown:
+    get:
+      operationId: getAdminReportsCategoryBreakdown
+      summary: Admin category breakdown (legacy alias)
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryBreakdownItem'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters: *id020
+  /admin/audit-logs:
+    get:
+      operationId: listAdminAuditLogs
+      summary: List audit logs
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogPage'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - name: entity_type
+        in: query
+        required: false
+        description: Entity type filter
+        schema:
+          type: string
+      - name: entity_id
+        in: query
+        required: false
+        description: Entity UUID
+        schema:
+          type: string
+          format: uuid
+      - name: actor_type
+        in: query
+        required: false
+        description: Actor type
+        schema:
+          type: string
+      - name: action
+        in: query
+        required: false
+        description: Action partial match
+        schema:
+          type: string
+      - name: search
+        in: query
+        required: false
+        description: Search entity/actor/action
+        schema:
+          type: string
+      - name: keyword
+        in: query
+        required: false
+        description: Alias for search
+        schema:
+          type: string
+      - name: organizer
+        in: query
+        required: false
+        description: Filter entity_name by organizer
+        schema:
+          type: string
+      - name: event
+        in: query
+        required: false
+        description: Filter entity_name by event
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        description: Page number
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: page_size
+        in: query
+        required: false
+        description: Page size (max 100)
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+  /admin/audit-logs/{log_id}:
+    get:
+      operationId: getAdminAuditLog
+      summary: Get audit log
+      tags: *id021
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLog'
+        '401': *id022
+        '403': *id023
+        '404': *id024
+        '409': *id025
+        '422': *id026
+        '500': *id027
+      security: *id028
+      parameters:
+      - name: log_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Audit log UUID
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token from login response (`access_token`).
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+    JwtErrorResponse:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+          example: Authentication is required
+        reason:
+          type: string
+          example: Token has expired
+    MessageResponse:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+    TokenResponse:
+      type: object
+      required:
+      - access_token
+      - actor_type
+      - expires_in
+      properties:
+        access_token:
+          type: string
+        actor_type:
+          type: string
+          enum:
+          - admin
+          - organizer
+        expires_in:
+          type: integer
+          example: 900
+      example:
+        access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        actor_type: organizer
+        expires_in: 900
+    Admin:
+      type: object
+      properties:
+        admin_id: &id031
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+        last_login: &id033
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_at: &id032
+          type: string
+          format: date-time
+    Organizer:
+      type: object
+      properties:
+        organizer_id: *id031
+        organizer_name:
+          type: string
+        contact_person:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        status:
+          type: string
+        total_events:
+          type: integer
+        active_events:
+          type: integer
+        total_registrations:
+          type: integer
+        total_tickets_sold:
+          type: integer
+        total_sales: &id034
+          type: string
+          example: '100.00'
+        created_at: *id032
+        archived_at: *id033
+    Category:
+      type: object
+      properties:
+        category_id: *id031
+        name:
+          type: string
+        description:
+          type:
+          - string
+          - 'null'
+        is_default:
+          type: boolean
+        total_events:
+          type: integer
+        total_registrations:
+          type: integer
+        total_tickets_sold:
+          type: integer
+        total_sales: *id034
+    Event:
+      type: object
+      properties:
+        event_id: *id031
+        organizer_id: &id035
+          type:
+          - string
+          - 'null'
+          format: uuid
+        organizer_name: &id036
+          type: string
+        category_id: &id037
+          type:
+          - string
+          - 'null'
+          format: uuid
+        category_name: &id038
+          type: string
+        title: &id039
+          type: string
+        description: &id040
+          type: string
+        event_type: &id041
+          type: string
+          enum:
+          - ONLINE
+          - OFFLINE
+          - HYBRID
+        venue: &id042
+          type: string
+        city: &id043
+          type: string
+        state: &id044
+          type: string
+        country: &id045
+          type: string
+        meeting_link: &id046
+          type:
+          - string
+          - 'null'
+        keywords: &id047
+          type: array
+          items:
+            type: string
+        ticket_price: *id034
+        is_free: &id048
+          type: boolean
+        convenience_fee: *id034
+        gateway_fee: *id034
+        capacity: &id049
+          type: integer
+        available_seats: &id050
+          type: integer
+        registration_start: *id033
+        registration_end: *id033
+        start_datetime: *id033
+        status: &id051
+          type: string
+          enum:
+          - DRAFT
+          - PUBLISHED
+          - ARCHIVED
+        registration_status: &id052
+          type: string
+          enum:
+          - OPEN
+          - CLOSED
+        banner_url: &id053
+          type:
+          - string
+          - 'null'
+    EventInternal:
+      type: object
+      properties:
+        event_id: *id031
+        organizer_id: *id035
+        organizer_name: *id036
+        category_id: *id037
+        category_name: *id038
+        title: *id039
+        description: *id040
+        event_type: *id041
+        venue: *id042
+        city: *id043
+        state: *id044
+        country: *id045
+        meeting_link: *id046
+        keywords: *id047
+        ticket_price: *id034
+        is_free: *id048
+        convenience_fee: *id034
+        gateway_fee: *id034
+        capacity: *id049
+        available_seats: *id050
+        registration_start: *id033
+        registration_end: *id033
+        start_datetime: *id033
+        status: *id051
+        registration_status: *id052
+        banner_url: *id053
+        organizer_email:
+          type: string
+        organizer_phone:
+          type: string
+        total_registrations:
+          type: integer
+        total_tickets_sold:
+          type: integer
+        total_sales: *id034
+        created_at: *id032
+        archived_at: *id033
+    EventWithMedia:
+      type: object
+      properties:
+        event_id: *id031
+        organizer_id: *id035
+        organizer_name: *id036
+        category_id: *id037
+        category_name: *id038
+        title: *id039
+        description: *id040
+        event_type: *id041
+        venue: *id042
+        city: *id043
+        state: *id044
+        country: *id045
+        meeting_link: *id046
+        keywords: *id047
+        ticket_price: *id034
+        is_free: *id048
+        convenience_fee: *id034
+        gateway_fee: *id034
+        capacity: *id049
+        available_seats: *id050
+        registration_start: *id033
+        registration_end: *id033
+        start_datetime: *id033
+        status: *id051
+        registration_status: *id052
+        banner_url: *id053
+        organizer_email:
+          type: string
+        organizer_phone:
+          type: string
+        total_registrations:
+          type: integer
+        total_tickets_sold:
+          type: integer
+        total_sales: *id034
+        created_at: *id032
+        archived_at: *id033
+        images:
+          type: array
+          items: &id054
+            type: object
+            properties:
+              media_id: *id031
+              media_type:
+                type: string
+                enum:
+                - IMAGE
+                - VIDEO
+              media_url:
+                type: string
+              display_order:
+                type: integer
+              created_at: *id032
+        videos:
+          type: array
+          items: *id054
+    EventCreate:
+      type: object
+      required:
+      - category_id
+      - title
+      - capacity
+      properties:
+        category_id: *id031
+        title: &id055
+          type: string
+          maxLength: 255
+        capacity: &id056
+          type: integer
+          minimum: 1
+        description: &id057
+          type: string
+        event_type: &id058
+          type: string
+          enum:
+          - ONLINE
+          - OFFLINE
+          - HYBRID
+        venue: &id059
+          type: string
+        city: &id060
+          type: string
+        state: &id061
+          type: string
+        country: &id062
+          type: string
+        meeting_link: &id063
+          type: string
+          format: uri
+        keywords: &id064
+          type: array
+          items:
+            type: string
+        ticket_price: &id065
+          type: number
+          minimum: 0
+        is_free: &id066
+          type: boolean
+        registration_start: *id032
+        registration_end: *id032
+        start_datetime: *id032
+        registration_status: &id067
+          type: string
+          enum:
+          - OPEN
+          - CLOSED
+    EventUpdate:
+      type: object
+      properties:
+        category_id: *id031
+        title: *id055
+        capacity: *id056
+        description: *id057
+        event_type: *id058
+        venue: *id059
+        city: *id060
+        state: *id061
+        country: *id062
+        meeting_link: *id063
+        keywords: *id064
+        ticket_price: *id065
+        is_free: *id066
+        registration_start: *id032
+        registration_end: *id032
+        start_datetime: *id032
+        registration_status: *id067
+    Registration: &id068
+      type: object
+      properties:
+        registration_id: *id031
+        event_id: *id031
+        event_title:
+          type: string
+        event_city:
+          type: string
+        registrant_name:
+          type: string
+        registrant_email:
+          type:
+          - string
+          - 'null'
+          format: email
+        registrant_phone:
+          type: string
+        seats_booked:
+          type: integer
+        ticket_price: *id034
+        discount_amount: *id034
+        convenience_fee: *id034
+        gateway_fee: *id034
+        total_amount: *id034
+        reservation_status:
+          type: string
+        registration_status:
+          type: string
+        reservation_expires_at: *id033
+        coupon_code:
+          type:
+          - string
+          - 'null'
+        created_at: *id032
+        confirmed_at: *id033
+        payment_id: *id031
+        payment_status:
+          type: string
+        receipt_number:
+          type:
+          - string
+          - 'null'
+        receipt_available:
+          type: boolean
+        order_id:
+          type: string
+    RegistrationCreate:
+      type: object
+      required:
+      - event_id
+      - registrant_name
+      - registrant_phone
+      properties:
+        event_id: *id031
+        registrant_name:
+          type: string
+          maxLength: 255
+        registrant_phone:
+          type: string
+        seats_booked:
+          type: integer
+          minimum: 1
+          default: 1
+        registrant_email:
+          type: string
+          format: email
+        coupon_code:
+          type: string
+      example:
+        event_id: 550e8400-e29b-41d4-a716-446655440000
+        registrant_name: Jane Doe
+        registrant_phone: '9876543210'
+        seats_booked: 2
+        coupon_code: SAVE10
+    RegistrationCreated:
+      allOf:
+      - *id068
+      - type: object
+        required:
+        - payment_id
+        - order_id
+        - amount
+        properties:
+          payment_id: *id031
+          order_id:
+            type: string
+          amount: *id034
+    Payment: &id070
+      type: object
+      properties:
+        payment_id: *id031
+        registration_id: *id031
+        order_id:
+          type: string
+        receipt_number:
+          type:
+          - string
+          - 'null'
+        event_title:
+          type: string
+        event_type:
+          type: string
+        venue:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        meeting_link:
+          type:
+          - string
+          - 'null'
+        category_name:
+          type: string
+        organizer_name:
+          type: string
+        buyer_name:
+          type: string
+        buyer_phone:
+          type: string
+        buyer_email:
+          type:
+          - string
+          - 'null'
+          format: email
+        ticket_price:
+          type:
+          - string
+          - 'null'
+        discount: *id034
+        convenience_fee: *id034
+        gateway_fee: *id034
+        amount: *id034
+        payment_status:
+          type: string
+        failure_reason:
+          type:
+          - string
+          - 'null'
+        initiated_at: *id032
+        completed_at: *id033
+        receipt_generated_at: *id033
+    PaymentOrder:
+      type: object
+      properties:
+        payment_id: *id031
+        registration_id: *id031
+        order_id:
+          type: string
+        amount: *id034
+        currency:
+          type: string
+          example: INR
+    Coupon:
+      type: object
+      properties:
+        coupon_id: *id031
+        code:
+          type: string
+        description:
+          type:
+          - string
+          - 'null'
+        flat_discount: *id034
+        is_active:
+          type: boolean
+        expiry_date: *id033
+        times_used:
+          type: integer
+        total_discount_given: *id034
+        created_at: *id032
+        updated_at: *id032
+    CouponValidateResponse:
+      type: object
+      properties:
+        coupon_code:
+          type: string
+        discount: *id034
+        final_amount: *id034
+        subtotal: *id034
+    AuditLog: &id069
+      type: object
+      properties:
+        log_id: *id031
+        actor_type:
+          type: string
+        actor_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        actor_name:
+          type: string
+        actor_email:
+          type: string
+        entity_type:
+          type: string
+        entity_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        entity_name:
+          type: string
+        action:
+          type: string
+        old_value: {}
+        new_value: {}
+        created_at: *id032
+    AuditLogPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items: *id069
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+    PlatformFees:
+      type: object
+      properties:
+        convenience_fee: *id034
+        gateway_fee: *id034
+        updated_at: *id033
+    AdminDashboard:
+      type: object
+      properties:
+        total_organizers:
+          type: integer
+        total_events:
+          type: integer
+        active_events:
+          type: integer
+        total_registrations:
+          type: integer
+        total_tickets_sold:
+          type: integer
+        total_revenue: *id034
+        total_value_earned: *id034
+    PeriodSummary:
+      type: object
+      properties:
+        total_events:
+          type: integer
+        total_registrations:
+          type: integer
+        total_revenue: *id034
+        total_organizers:
+          type: integer
+    MonthlyBarItem:
+      type: object
+      properties:
+        month:
+          type: string
+          example: 2026-08
+        events:
+          type: integer
+        registrations:
+          type: integer
+        revenue: *id034
+        organizers:
+          type: integer
+    OrganizerMonthlyItem:
+      type: object
+      properties:
+        month:
+          type: string
+        events:
+          type: integer
+        registrations:
+          type: integer
+        revenue: *id034
+    CategoryBreakdownItem:
+      type: object
+      properties:
+        category_name:
+          type: string
+        event_count:
+          type: integer
+    OrganizerDashboard:
+      type: object
+      properties:
+        total_events:
+          type: integer
+        active_events:
+          type: integer
+        draft_events:
+          type: integer
+        closed_events:
+          type: integer
+        archived_events:
+          type: integer
+        total_registrations:
+          type: integer
+        total_revenue: *id034
+        total_tickets_sold:
+          type: integer
+        upcoming_events:
+          type: array
+          items:
+            type: object
+            properties:
+              event_id: *id031
+              title:
+                type: string
+              start_datetime: *id032
+              city:
+                type: string
+              available_seats:
+                type: integer
+    OrganizerPeriodSummary:
+      type: object
+      properties:
+        total_events:
+          type: integer
+        total_registrations:
+          type: integer
+        total_revenue: *id034
+    SalesSummary:
+      type: object
+      properties:
+        total_sales: *id034
+        total_registrations:
+          type: integer
+        total_tickets_sold:
+          type: integer
+        recent_transactions:
+          type: array
+          items: *id070
+    EventSales:
+      type: object
+      properties:
+        total_sales: *id034
+        total_registrations:
+          type: integer
+        total_tickets_sold:
+          type: integer
+    MediaUpload:
+      type: object
+      properties:
+        media_id: *id031
+        media_type:
+          type: string
+          enum:
+          - IMAGE
+          - VIDEO
+        media_url:
+          type: string
+        display_order:
+          type: integer
+    HealthOk:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - ok
+        database:
+          type: string
+          enum:
+          - connected
+        timestamp: *id032
+        version:
+          type: string
+    HealthUnavailable:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - unavailable
+        database:
+          type: string
+          enum:
+          - unavailable
+        timestamp: *id032
+        version:
+          type: string
+    LoginBody:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    UnifiedLoginBody:
+      type: object
+      required:
+      - actor_type
+      - email
+      - password
+      properties:
+        actor_type:
+          type: string
+          enum:
+          - admin
+          - organizer
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    RegisterOrganizerBody:
+      type: object
+      required:
+      - organizer_name
+      - contact_person
+      - email
+      - phone
+      - password
+      properties:
+        organizer_name:
+          type: string
+        contact_person:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        password:
+          type: string
+          format: password
+    PasswordResetRequest:
+      type: object
+      required:
+      - actor_type
+      - email
+      properties:
+        actor_type:
+          type: string
+          enum:
+          - admin
+          - organizer
+        email:
+          type: string
+          format: email
+    PasswordResetConfirm:
+      type: object
+      required:
+      - token
+      - new_password
+      properties:
+        token:
+          type: string
+        new_password:
+          type: string
+          format: password
+    ChangePasswordBody:
+      type: object
+      required:
+      - current_password
+      - new_password
+      properties:
+        current_password:
+          type: string
+          format: password
+        new_password:
+          type: string
+          format: password
+security:
+- BearerAuth: []

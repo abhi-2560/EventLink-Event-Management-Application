@@ -9,6 +9,9 @@ from app.models import Admin
 from .exceptions import ValidationError
 
 
+# "This function is expected to return an object of type Admin."
+# _ -> meant for internal use: nothing special, just identification
+
 def _fee_admin() -> Admin:
     admin = Admin.query.order_by(Admin.created_at.asc()).first()
     if admin is None:

@@ -10,7 +10,7 @@ health_bp = Blueprint("health", __name__)
 
 @health_bp.route("/health", methods=["GET"])
 def health_check():
-    """Readiness-aware health endpoint suitable for load balancers."""
+    """Readiness-aware health endpoint"""
 
     timestamp = datetime.now(timezone.utc).isoformat()
     try:

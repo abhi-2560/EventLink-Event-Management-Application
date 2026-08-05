@@ -40,6 +40,10 @@ def create_app(config_class=Config):
     register_request_logging(app)
     register_jwt_error_handlers()
 
+    @app.get("/")
+    def api_root():
+        return jsonify({"message": "Event Management API is running"}), 200
+
     app.logger.info(
         "application_started",
         extra={"version": app.config["APP_VERSION"], "environment": app.config.get("ENV")},
@@ -137,3 +141,7 @@ def register_blueprints(app):
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(organizer_bp, url_prefix="/organizer")
     app.register_blueprint(public_bp)
+
+    from .routes.docs import docs_bp
+
+    app.register_blueprint(docs_bp)
