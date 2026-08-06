@@ -1,5 +1,14 @@
+// Jest replaces the real axios package with a fake version.
+
+// Normally:
+
+// import axios from 'axios';
+
+// would load the actual Axios library.
+// But during this test, Jest substitutes it with the object you provided.
+
 jest.mock('axios', () => ({
-  __esModule: true,
+  __esModule: true, // "Treat this mock as an ES module with a default export."
   default: {
     isAxiosError: (error: unknown) => typeof error === 'object' && error !== null && 'isAxiosError' in error,
   },
