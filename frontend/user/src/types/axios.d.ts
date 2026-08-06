@@ -1,3 +1,6 @@
+// .d.ts: ts declaration file
+
+
 import 'axios';
 
 declare module 'axios' {

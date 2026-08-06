@@ -18,6 +18,10 @@ api.interceptors.request.use((config) => {
 });
 
 let refreshPromise: Promise<string> | null = null;
+// refreshPromise is a variable that stores an ongoing refresh request.
+// null → no refresh is happening.
+// Promise<string> → a refresh request is currently running and will eventually return a new access token (a string).
+
 
 function refreshAccessToken(): Promise<string> {
   if (!refreshPromise) {
@@ -38,11 +42,29 @@ function refreshAccessToken(): Promise<string> {
   return refreshPromise;
 }
 
+
+/*
+api.interceptors.response.use(
+  successHandler,
+  errorHandler
+  
+  successHandler: (response) => response,
+  errorHandler: async (error: unknown) => {
+    if (!axios.isAxiosError(error)) return Promise.reject(toApiError(error));
+);
+*/
 api.interceptors.response.use(
   (response) => response,
   async (error: unknown) => {
     if (!axios.isAxiosError(error)) return Promise.reject(toApiError(error));
+
+    // in case of 401 or something, it is stored as error.config
     const originalRequest = error.config as InternalAxiosRequestConfig | undefined;
+
+    //     It means:
+    // response status is 401
+    // the original request exists
+    // it has not already been retried
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
       try {

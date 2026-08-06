@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, HomeIcon } from 'lucide-react';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import { loginOrganizer } from '../../api/authApi';
@@ -29,6 +29,14 @@ export default function OrganizerLogin() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-purple-200 p-4">
+      <button
+        type="button"
+        className="absolute right-4 top-4 flex items-center gap-2 rounded-lg px-4 py-2 text-xl font-medium text-gray-800 hover:bg-brand-600 hover:text-white  transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg"
+        onClick={() => navigate('/')}
+      >
+        <HomeIcon className='w-4 h-4'/>
+        Home
+      </button>
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
         <div className="mb-6 flex items-center gap-3">
           <div className="rounded-xl bg-brand-600 p-3 text-white">

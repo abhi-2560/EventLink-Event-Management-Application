@@ -37,7 +37,8 @@ export default function EventCard({ event, featured = false }: { event: Event; f
     <article
       className={cn(
         'group flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl',
-        featured && 'ring-2 ring-brand-200 ring-offset-2',
+        !featured && 'ring-2 ring-brand-600 ring-offset-2',
+        featured && 'ring-2 ring-black ring-offset-2'
       )}
     >
       <div className={cn('relative h-44 bg-gradient-to-br p-5', gradient)}>
@@ -56,14 +57,31 @@ export default function EventCard({ event, featured = false }: { event: Event; f
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-5">
-        <h3 className="relative mt-3 line-clamp-2 font-display text-2xl text-black font-extrabold ">
+
+
+        {/* <h3 className="relative mt-3 line-clamp-2 font-display text-2xl text-black font-extrabold ">
+          {event.title}
+        </h3> */}
+
+        {/* Title has been clamped so that it does not increase the card size */}
+        {/* <h3 className="relative mt-3 line-clamp-2 min-h-[4rem] font-display text-xl font-extrabold text-black">
+          {event.title}
+        </h3> */}
+
+        <h3
+          className={cn(
+            "relative mt-3 line-clamp-2 min-h-[4rem] text-black font-display font-bold",
+            featured ? "text-3xl" : "text-xl"
+          )}
+        >
           {event.title}
         </h3>
+
         {/* {event.description && (
           <p className="line-clamp-2 text-sm leading-relaxed text-muted">{event.description}</p>
         )} */}
 
-        <p className="line-clamp-2 min-h-[2.75rem] text-sm leading-relaxed text-muted">
+        <p className="line-clamp-2 min-h-11 text-sm leading-relaxed text-muted">
           {event.description || "\u00A0"}
         </p>
 

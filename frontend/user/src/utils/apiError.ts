@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+// An interface is a blueprint for the shape of an object.
 interface ApiErrorOptions {
   status?: number;
   code?: string;

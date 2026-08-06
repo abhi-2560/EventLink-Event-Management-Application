@@ -29,10 +29,28 @@ export default function PlatformFeeSettings() {
     } : undefined,
   });
 
+  // const mutation = useMutation({
+  //   mutationFn: updatePlatformFees,
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({ queryKey: ['admin-platform-fees'] });
+  //     showSuccess('Platform fees updated');
+  //   },
+  //   onError: showError,
+  // });
+
+
   const mutation = useMutation({
     mutationFn: updatePlatformFees,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-platform-fees'] });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['admin-platform-fees'],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['admin-audit'],
+        }),
+      ]);
+
       showSuccess('Platform fees updated');
     },
     onError: showError,
