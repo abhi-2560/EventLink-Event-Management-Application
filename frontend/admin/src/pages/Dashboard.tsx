@@ -92,14 +92,14 @@ export default function Dashboard() {
 
       <div className="flex flex-wrap gap-3">
         <Link to="/categories">
-          <Button variant="secondary">
+          <Button variant="secondary_admin" className="transition-all duration-100 shadow-md active:translate-y-1 active:shadow-sm active:scale-[0.98]">
             <Tags className="h-4 w-4" />
             Manage Categories
           </Button>
         </Link>
 
         <Link to="/reports">
-          <Button variant="secondary">
+          <Button variant="secondary_admin"   className="transition-all duration-100 shadow-md active:translate-y-1 active:shadow-sm active:scale-[0.98]">
             <BarChart3 className="h-4 w-4" />
             Reports
           </Button>

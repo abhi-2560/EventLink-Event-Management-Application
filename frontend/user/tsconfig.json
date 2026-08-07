@@ -19,7 +19,10 @@
     "baseUrl": ".",
     "ignoreDeprecations": "6.0",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@registrant/*": ["src/registrant/*"],
+      "@organizer/*": ["src/organizer/*"],
+      "@shared/*": ["src/shared/*"]
     },
     "types": ["jest", "node"]
   },

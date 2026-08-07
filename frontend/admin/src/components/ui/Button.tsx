@@ -6,6 +6,7 @@ const variants = {
   secondary: 'bg-white text-slate-700 border border-border hover:bg-slate-50',
   danger: 'bg-danger text-white hover:bg-red-700',
   ghost: 'text-accent hover:bg-indigo-50',
+  secondary_admin: 'bg-white text-slate-700 border border-border hover:bg-accent hover:text-white'
 };
 
 const sizes = { sm: 'px-3 py-1.5 text-xs', md: 'px-4 py-2 text-sm', lg: 'px-5 py-2.5 text-sm' };
