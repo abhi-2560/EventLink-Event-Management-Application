@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
-import { CalendarDays, Users, IndianRupee, FileText, Lock } from 'lucide-react';
+import { CalendarDays, Users, IndianRupee, FileText, Lock, MonitorOff, MonitorCog } from 'lucide-react';
 import StatCard from '@organizer/components/StatCard';
 import { MonthlyBarChart, CategoryPieChart } from '@organizer/components/DashboardCharts';
 import Loader from '@shared/components/common/Loader';
@@ -36,6 +36,7 @@ export default function OrganizerDashboard() {
   if (dashboard.isLoading) return <Loader message="Loading dashboard..." />;
 
   const d = dashboard.data;
+
   
   return (
     <div className="space-y-8">

@@ -6,7 +6,7 @@ import Loader from '@shared/components/common/Loader';
 import EmptyState from '@shared/components/common/EmptyState';
 import { BarChart3 } from 'lucide-react';
 
-const COLORS = ['#0c87eb', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#be185d'];
+const COLORS = ['#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#be185d'];
 
 interface CategoryReportItem {
   category_name?: string;
@@ -58,10 +58,12 @@ export function MonthlyBarChart({ data, loading, error }: ChartProps<MonthlyRepo
   const chartData = data.map((d) => ({
     month: d.month,
     Registrations: Number(d.registrations),
-    Revenue: Number(d.revenue),
+    // Revenue: Number(d.revenue),
     Events: Number(d.events),
   }));
 
+  console.log(chartData)
+  
   return (
     <ResponsiveContainer width="100%" height={320}>
       <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -70,8 +72,8 @@ export function MonthlyBarChart({ data, loading, error }: ChartProps<MonthlyRepo
         <YAxis tick={{ fontSize: 12 }} />
         <Tooltip />
         <Legend />
-        <Bar dataKey="Registrations" fill="#0c87eb" radius={[4, 4, 0, 0]} />
-        <Bar dataKey="Revenue" fill="#059669" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="Registrations" fill="#059669" radius={[4, 4, 0, 0]} />
+        {/* <Bar dataKey="Revenue" fill="#059669" radius={[4, 4, 0, 0]} /> */}
         <Bar dataKey="Events" fill="#d97706" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
