@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -8,6 +9,14 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss()],
+    resolve: {
+      alias: {
+        '@registrant': path.resolve(__dirname, 'src/registrant'),
+        '@organizer': path.resolve(__dirname, 'src/organizer'),
+        '@shared': path.resolve(__dirname, 'src/shared'),
+        '@': path.resolve(__dirname, 'src'),
+      },
+    },
     server: {
       port: Number(env.VITE_DEV_SERVER_PORT) || 5173,
       proxy: {

@@ -26,6 +26,33 @@ export default [
       ...js.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.{test,spec}.{ts,tsx}', '**/tests/**/*.{ts,tsx}', 'src/setupTests.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+        ...globals.node,
+      },
+    },
+  },
+  {
+    files: ['vite.config.ts', 'jest.config.cjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
     },
   },
 ];
